@@ -1,0 +1,2 @@
+batch count: 1 / score: 12552.0
+batch count: 2 / score: 12552.0
