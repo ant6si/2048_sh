@@ -1,4 +1,5 @@
 import os, pygame, time, random, math
+os.environ['SDL_AUDIODRIVER'] = 'dsp'
 from copy import deepcopy
 from pprint import pprint
 import numpy as np
@@ -30,8 +31,8 @@ GET_DELTAS = [
   lambda r, c: ((r, i) for i in range(c + 1, 4))  # LEFT
 ]
 
-PROCESS_NUM = 4
-BATCH_SIZE = 10
+PROCESS_NUM = 3
+BATCH_SIZE = 3
 f_handler = FeatureHandler()
 LEARNING_RATE = 0.025 #0.00025
 DEPTH=3;
@@ -197,6 +198,7 @@ def play_game(queue, game_class=Game2048, title='2048!', data_dir='save'):
     episode = [board_chain, reward_chain, final_score]
     queue.put(episode)
     manager.close()
+    pygame.quit()
     return final_score
 
 def print_episode(queue):
@@ -251,7 +253,7 @@ def batch_update(queue, batch_count, max_avg_score):
         delta = dict.get(tuple_moved_board)[0]
         f_handler.updateValue(np.array(moved_board), delta)
     print("---update done, save the latest weights---")
-    f_handler.saveWeights("saved_the latest_weights.pickle")
+    f_handler.saveWeights("saved_latest_weights.pickle")
 
     if max_avg_score <= batch_score_avg:
         max_avg_score = batch_score_avg
@@ -300,6 +302,15 @@ def updateEvaluation(dict, episode):
         # f_handler.updateValue(np.array(board_chain[i]), delta)
         # f_handler.updateValue(v[i][2], LEARNING_RATE * (score - f_handler.getValue(v[i][2])))
 
+def isGameDone(players):
+    is_all_dead = True
+    for index in range(len(players)):
+        player = players[index]
+        if player.is_alive():
+            print("{}-th player is not done.".format(index))
+            is_all_dead = False
+    return is_all_dead
+
 
 if __name__ == "__main__":
     # print("before load weight: {}".format(np.where(f_handler.featureSet[0].getWeight() != 0)))
@@ -310,12 +321,25 @@ if __name__ == "__main__":
     # print(f_handler.featureSet[0].getWeight()[load_weight_indices])
     queue = Queue()
     players = []
-    for i in range(PROCESS_NUM):
-        player = Process(target=play_game_N_times, args=(queue, ))
-        players.append(player)
-        player.start()
     updater = Process(target=batch_update_forever, args=(queue, ))
     updater.start()
+    while True:
+        players = []
+        for i in range(PROCESS_NUM):
+            player = Process(target=play_game, args=(queue, ))
+            players.append(player)
+            print("Player start!")
+            player.start()
+        time.sleep(0.1)
+        for player in players:
+            player.join()
+            print("Process alive? {}".format(player.is_alive()))
+            #player.terminate()
+            time.sleep(0.1)
+        print("Is Game done?: {}".format(isGameDone(players)))
+    #while not isGameDone(players):
+        #time.sleep(10)
+        #print("keep playing")
 
     # count = 0
     # score_set = []
