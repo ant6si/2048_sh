@@ -83,3 +83,20 @@ def reverseRow(row):
 
 def reverseCol(matrix):
     return np.flip(matrix, axis=0)
+
+
+def list_to_tuple(l):
+    # only work for dimension 2
+    length = len(l)
+    t_list = []
+    for i in range(length):
+        t_list.append(tuple(l[i]))
+    t = tuple(t_list)
+    return t
+
+def tuple_to_list(t):
+    length = len(t)
+    l = []
+    for i in range(length):
+        l.append(list(t[i]))
+    return l

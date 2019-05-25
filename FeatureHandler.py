@@ -17,8 +17,12 @@ class FeatureHandler(object):
         self.axe = axeTuple()
         self.recTangle = recTangTuple()
         self.lineTuple = lineTuple()
-        self.featureSet = [self.emptyTile, self.lineTuple, self.recTangle, self.axe, self.maxTile, self.layerTile,
-                           self.distinctTile, self.mergeableTile]
+        self.SC_LineTuples = SC_Linetuple()
+        self.SC_RecTuples = SC_Rectuple()
+        self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
+        #self.featureSet = [ self.mergeableTile]
+        # self.featureSet = [self.emptyTile, self.lineTuple, self.recTangle,self.axe , self.maxTile, self.layerTile,
+        #                    self.distinctTile, self.mergeableTile]
         # self.featureSet = [self.emptyTile, self.lineTuple, self.recTangle, self.axe, self.maxTile, self.distinctTile,
         #                    self.mergeableTile]
         #self.featureSet = [self.combineMax]
@@ -59,7 +63,7 @@ class FeatureHandler(object):
             self.featureSet[i].setSymmetricBoards(rotateBoards, isomorphicBoards)
 
     def getValue(self, board):
-        self.setSymmetricBoards(board)
+        #self.setSymmetricBoards(board)
         value = 0
         for idx in range(len(self.featureSet)):
             value += self.featureSet[idx].getScore(board)

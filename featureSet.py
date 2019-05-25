@@ -6,6 +6,96 @@ import numpy as np
 from operation import *
 from feature import feature
 
+
+class SC_Linetuple(feature):
+    def __init__(self):
+        # [dict_1, dict_2, dict_3, dict_4]
+        r_dict_1, r_dict_2, r_dict_3, r_dict_4 = {}, {}, {}, {}
+        c_dict_1, c_dict_2, c_dict_3, c_dict_4 = {}, {}, {}, {}
+        self.r_dict_list = [r_dict_1, r_dict_2, r_dict_3, r_dict_4]
+        self.c_dict_list = [c_dict_1, c_dict_2, c_dict_3, c_dict_4]
+        self.tot_dict_list = [self.r_dict_list, self.c_dict_list]
+        self.num_of_tuples_float = 8.0
+
+    def getScore(self, mboard):
+        line_sum=0;
+        for idx in range(4):
+            r_dict = self.r_dict_list[idx]
+            c_dict = self.c_dict_list[idx]
+            line_sum += self.get_key_value(r_dict,tuple(mboard[3-idx])) # row_wise
+            line_sum += self.get_key_value(c_dict, tuple(mboard[:, idx])) # col_wise
+        return line_sum
+
+    def updateScore(self, mboard, delta):
+        _delta = delta/self.num_of_tuples_float
+        for idx in range(4):
+            r_dict = self.r_dict_list[idx]
+            c_dict = self.c_dict_list[idx]
+            row_key = tuple(mboard[3-idx])
+            col_key = tuple(mboard[:, idx])
+            # col_key = tuple(board[:,id])
+            r_value = self.get_key_value(r_dict, row_key)
+            c_value = self.get_key_value(c_dict, col_key)
+            r_dict[row_key] += _delta
+            c_dict[col_key] += _delta
+            # with open("update_log.txt", "a") as f:
+            #     f.write("Key: {}, Before: {}, delta: {}, after: {}\n".format(key, value, delta, dict[key]))
+
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
+        _dict[_key] = 1000 # initialized with 0
+        return _dict[_key]
+
+    def getWeight(self):
+        return self.tot_dict_list
+
+    def loadWeight(self, weight):
+        self.tot_dict_list = weight
+        self.r_dict_list = self.tot_dict_list[0]
+        self.c_dict_list = self.tot_dict_list[1]
+
+class SC_Rectuple(feature):
+    def __init__(self):
+        self.rec_dict_list = []
+        for idx in range(9):
+            self.rec_dict_list.append({})
+        self.num_of_tuples_float = 9.0
+
+    def getScore(self, mboard):
+        rec_sum=0
+        count=-1
+        for r in range(3):
+            for c in range(3):
+                count+=1
+                _dict = self.rec_dict_list[count]
+                _key = list_to_tuple(mboard[r:r + 2, c:c + 2])
+                rec_sum += self.get_key_value(_dict, _key)
+        return rec_sum
+
+    def updateScore(self, mboard, delta):
+        _delta = delta / self.num_of_tuples_float
+        count = -1
+        for r in range(3):
+            for c in range(3):
+                count += 1
+                _dict = self.rec_dict_list[count]
+                _key = list_to_tuple(mboard[r:r + 2, c:c + 2])
+                _v = self.get_key_value(_dict, _key)
+                _dict[_key] += _delta
+
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
+        _dict[_key] = 1000 # initialized with 0
+        return _dict[_key]
+
+    def getWeight(self):
+        return self.rec_dict_list
+
+    def loadWeight(self, weight):
+        self.rec_dict_list = weight
+
 class lineTuple(feature):
     def __init__(self):
         self.fourTuple = np.zeros([2,16,16,16,16], dtype=np.float)
@@ -14,13 +104,12 @@ class lineTuple(feature):
     def getIndex(self, board, num):
         if (num!=0 and num!=1):
             print("Wrong Input Number!\n")
-        col = getCol(board, 3-num)
 
+        col = getCol(board, 3-num)
         # index = np.zeros([4], dtype=int)
         # for i in range(4):
         #     if col[i]!=0:
         #         index[i] = np.log2(col[i]).astype(int)
-
         index = np.where(col!= 0, np.log2(col), 0).astype(int)
         return index
 
@@ -50,7 +139,7 @@ class lineTuple(feature):
         return idx
 
     def getScore(self, board):
-        self.boards = self.getRotateBoards()
+        self.boards = self.getRotateBoards() #? rotate 가 안되는 것 같은데요?
         # self.boards = board
 
         sum = 0.0
@@ -76,6 +165,7 @@ class lineTuple(feature):
         # sum += self.fourTuple[j][idx]
         # print("sum", sum)
         return sum
+
 
     def getWeight(self):
         return self.fourTuple

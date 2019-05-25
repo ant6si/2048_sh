@@ -8,6 +8,7 @@ from _2048.game import Game2048
 from _2048.manager import GameManager
 from FeatureHandler import *
 from multiprocessing import Process, Queue
+from operation import *
 
 # define events
 EVENTS = [
@@ -31,12 +32,11 @@ GET_DELTAS = [
   lambda r, c: ((r, i) for i in range(c + 1, 4))  # LEFT
 ]
 
-PROCESS_NUM = 3
-BATCH_SIZE = 3
+PROCESS_NUM = 1
+BATCH_SIZE = 1
 f_handler = FeatureHandler()
-LEARNING_RATE = 0.025 #0.00025
-DEPTH=3;
-
+LEARNING_RATE = 0.01 #0.00025
+DEPTH=1;
 
 def free_cells(grid):
     # count number of free cells in the grid
@@ -161,24 +161,24 @@ def play_game(queue, game_class=Game2048, title='2048!', data_dir='save'):
     running = True
     count = 0
     while running:
-        clock.tick(120)
+        clock.tick(2000)
         tick += 1
         if tick % 2 == 0:
+            # t1 = time.time()
             count+=1
             #print("count: {}".format(count))
             old_grid = deepcopy(manager.game.grid)
             old_score = manager.game.score
             best_action, best_score, moved_grid = findBestMove(old_grid)
             board_chain.append(moved_grid)
-
+            # t2 = time.time()
             if best_action is None:
                 final_score = manager.game.score
-                new_score = manager.game.score
-                reward = new_score - old_score
+                reward = final_score - old_score
+                assert reward == 0, "The last reward wasn't Zero"
                 reward_chain.append(reward)
                 #print('The end. \n Score:{} / Max num: {}'.format(manager.game.score, np.max(manager.game.grid)))
                 break
-
             #print(best_action)
             e = EVENTS[best_action]
             manager.dispatch(e)
@@ -187,6 +187,8 @@ def play_game(queue, game_class=Game2048, title='2048!', data_dir='save'):
             reward_chain.append(reward)
             #pprint(manager.game.grid, width=30)
             #print(manager.game.score)
+            # t3 = time.time()
+            # print("Find best action: {}s , dispatch action: {}s".format(t2-t1, t3-t2))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -205,42 +207,28 @@ def print_episode(queue):
     episode = queue.get()
     board_chain = episode[0]
     reward_chain = episode[1]
-    print("board_length: {}, reward_length: {}".format(len(board_chain), len(reward_chain)))
+    final_score = episode[2]
+    print("board_length: {}, reward_length: {}, final_score: {}".format(len(board_chain), len(reward_chain), final_score))
+
 def print_episode_forever(queue):
     while True:
         print_episode(queue)
 
-def list_to_tuple(l):
-    # only work for dimension 2
-    length = len(l)
-    t_list = []
-    for i in range(length):
-        t_list.append(tuple(l[i]))
-    t = tuple(t_list)
-    return t
 
-def tuple_to_list(t):
-    length = len(t)
-    l = []
-    for i in range(length):
-        l.append(list(t[i]))
-    return l
+# def batch_update_forever(queue):
+#     batch_count = 0
+#     max_avg_score = 0
+#     while True:
+#         batch_count += 1
+#         max_avg_score = batch_update(queue, batch_count, max_avg_score)
 
-
-def batch_update_forever(queue):
-    batch_count = 0
-    max_avg_score = 0
-    while True:
-        batch_count += 1
-        max_avg_score = batch_update(queue, batch_count, max_avg_score)
-
-def batch_update(queue, batch_count, max_avg_score):
+def batch_update(queue, batch_count):
     batch_size=BATCH_SIZE
     dict = {}
     batch_score_sum=0
     for i in range(batch_size):
         episode = queue.get()
-        print("Get {}-th episode, Game score: {}".format(i+1, episode[2]))
+        # print("Get {}-th episode, Game score: {}".format(i+1, episode[2]))
         batch_score_sum += episode[2]
         updateEvaluation(dict, episode)
     batch_score_avg = batch_score_sum / float(batch_size)
@@ -255,21 +243,20 @@ def batch_update(queue, batch_count, max_avg_score):
     print("---update done, save the latest weights---")
     f_handler.saveWeights("saved_latest_weights.pickle")
 
-    if max_avg_score <= batch_score_avg:
-        max_avg_score = batch_score_avg
-        print("---Find Maximum Weights and Save it---")
-        weight_indices = np.where(f_handler.featureSet[0].getWeight() != 0)
-        f_handler.saveWeights("saved_best_weights.pickle")
-
+    # if max_avg <= batch_score_avg:
+    #     print("---Find Maximum Weights and Save it---")
+    #     print("Before max: {}/ After max: {}".format(max_avg, batch_score_avg))
+    #     max_avg = batch_score_avg
+    #     # weight_indices = np.where(f_handler.featureSet[0].getWeight() != 0)
+    #     f_handler.saveWeights("saved_best_weights.pickle")
     del dict
-    return max_avg_score
-
+    # return max_avg
 
 def updateEvaluation(dict, episode):
     board_chain = episode[0]
     reward_chain = episode[1]
     chain_len = len(board_chain)
-    lamb = 0.5
+    lamb=0.5
     for i in range(chain_len):
         size = 5
         G_t_lambda = 0
@@ -321,22 +308,27 @@ if __name__ == "__main__":
     # print(f_handler.featureSet[0].getWeight()[load_weight_indices])
     queue = Queue()
     players = []
-    updater = Process(target=batch_update_forever, args=(queue, ))
-    updater.start()
+    batch_count = 0
+
+
     while True:
+        batch_count += 1
+        batch_st = time.time()
         players = []
+        updater = Process(target=batch_update, args=(queue, batch_count))
+        updater.start()
+
         for i in range(PROCESS_NUM):
             player = Process(target=play_game, args=(queue, ))
             players.append(player)
-            print("Player start!")
             player.start()
         time.sleep(0.1)
         for player in players:
             player.join()
-            print("Process alive? {}".format(player.is_alive()))
             #player.terminate()
-            time.sleep(0.1)
-        print("Is Game done?: {}".format(isGameDone(players)))
+        time.sleep(0.1)
+        updater.join()
+        print("Time for one batch: {}".format(time.time()-batch_st))
     #while not isGameDone(players):
         #time.sleep(10)
         #print("keep playing")
