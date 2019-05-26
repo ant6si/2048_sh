@@ -36,15 +36,18 @@ class SC_Linetuple(feature):
             # col_key = tuple(board[:,id])
             r_value = self.get_key_value(r_dict, row_key)
             c_value = self.get_key_value(c_dict, col_key)
-            r_dict[row_key] += _delta
-            c_dict[col_key] += _delta
+            # with open('weight_log.txt', 'a') as f:
+            #     f.write("key:{} before update: {} delta: {}".format(row_key, r_dict[row_key], _delta))
+            r_dict[row_key] = r_value + _delta
+            c_dict[col_key] = c_value + _delta
             # with open("update_log.txt", "a") as f:
-            #     f.write("Key: {}, Before: {}, delta: {}, after: {}\n".format(key, value, delta, dict[key]))
+            # with open('weight_log.txt', 'a') as f:
+            #     f.write("after update: {} \n".format(r_dict[row_key]))
 
     def get_key_value(self, _dict, _key):
         if _key in _dict:
             return _dict[_key]
-        _dict[_key] = 1000 # initialized with 0
+        _dict[_key] = 0 # initialized with 0
         return _dict[_key]
 
     def getWeight(self):
@@ -87,7 +90,7 @@ class SC_Rectuple(feature):
     def get_key_value(self, _dict, _key):
         if _key in _dict:
             return _dict[_key]
-        _dict[_key] = 1000 # initialized with 0
+        _dict[_key] = 0 # initialized with 0
         return _dict[_key]
 
     def getWeight(self):

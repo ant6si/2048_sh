@@ -1,5 +1,6 @@
 import os, pygame, time, random, math
 os.environ['SDL_AUDIODRIVER'] = 'dsp'
+
 from copy import deepcopy
 from pprint import pprint
 import numpy as np
@@ -32,10 +33,10 @@ GET_DELTAS = [
   lambda r, c: ((r, i) for i in range(c + 1, 4))  # LEFT
 ]
 
-PROCESS_NUM = 1
-BATCH_SIZE = 1
+PROCESS_NUM = 4
+BATCH_SIZE = 4
 f_handler = FeatureHandler()
-LEARNING_RATE = 0.01 #0.00025
+LEARNING_RATE =  0.1#0.01
 DEPTH=1;
 
 def free_cells(grid):
@@ -300,12 +301,18 @@ def isGameDone(players):
 
 
 if __name__ == "__main__":
-    # print("before load weight: {}".format(np.where(f_handler.featureSet[0].getWeight() != 0)))
+    # print("before load weight: {}".format(f_handler.featureSet[0].getWeight()))
     # print("---Load saved weights---")
-    # f_handler.loadWeights("saved_weights.pickle")
-    # load_weight_indices = np.where(f_handler.featureSet[0].getWeight() != 0)
-    # print("after load weight: {}".format(load_weight_indices))
+    # f_handler.loadWeights("saved_latest_weights.pickle")
+    # line_weight = f_handler.featureSet[0].getWeight()
+    # # print("after load weight: {}".format(load_weight_indices))
+    # with open('weight_check.txt', 'w') as f:
+    #     for i in range(8):
+    #         a = int(i/4)
+    #         b = int(i%4)
+    #         f.write("{}\n".format(line_weight[a][b]))
     # print(f_handler.featureSet[0].getWeight()[load_weight_indices])
+
     queue = Queue()
     players = []
     batch_count = 0
@@ -329,6 +336,8 @@ if __name__ == "__main__":
         time.sleep(0.1)
         updater.join()
         print("Time for one batch: {}".format(time.time()-batch_st))
+
+
     #while not isGameDone(players):
         #time.sleep(10)
         #print("keep playing")
