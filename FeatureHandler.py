@@ -70,10 +70,11 @@ class FeatureHandler(object):
         return value
 
     def updateValue(self, board, delta):
-        self.setSymmetricBoards(board)
+        # self.setSymmetricBoards(board)
         part_delta = delta / float(len(self.featureSet))
         for idx in range(len(self.featureSet)):
             self.featureSet[idx].updateScore(board, part_delta)
+            # self.featureSet[idx].updateScore(board, delta)
 
     def loadWeights(self, weight_file):
         with open(weight_file, 'rb') as f:

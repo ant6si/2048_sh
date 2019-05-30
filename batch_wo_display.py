@@ -38,12 +38,41 @@ BATCH_SIZE = 10
 LEARNING_RATE = 0.01  # 0.01
 DEPTH = 1
 
-queue = Queue()
+episodes = Queue()
 f_queue = Queue()
+tokens = Queue()
+
+
+def print_grid(grid):
+    for r in range(4):
+        for c in range(4):
+            print("{}".format(grid[r][c]), end=" ")
+        print()
+    print()
+
+def get_initial_grid():
+    grid = [ [ 0 for i in range(4)] for j in range(4) ]
+    add_random_tile(grid)
+    add_random_tile(grid)
+    return grid
 
 def free_cells(grid):
     # count number of free cells in the grid
     return [(x, y) for x in range(4) for y in range(4) if not grid[y][x]]
+
+def add_random_tile(grid):
+    free_cell_list = free_cells(grid)
+    assert len(free_cell_list) !=0
+
+    r1 = random.randrange(0,len(free_cell_list))
+    rand_loc = free_cell_list[r1]
+
+    assert grid[rand_loc[1]][rand_loc[0]] == 0
+    r2 = random.random()
+    if r2 < 0.1:
+        grid[rand_loc[1]][rand_loc[0]] = 4
+    else:
+        grid[rand_loc[1]][rand_loc[0]] = 2
 
 
 def move(grid, action):
@@ -98,7 +127,7 @@ def findBestMove(grid, f_handler, depth=0):
         if not moved:
             continue
 
-        new_score = add_new_tiles(moved_grid, f_handler, depth+1)
+        new_score = expected_random_tile_score(moved_grid, f_handler, depth+1)
         if new_score >= best_score:
             best_moved_grid = deepcopy(moved_grid)
             best_score = new_score
@@ -107,7 +136,7 @@ def findBestMove(grid, f_handler, depth=0):
     return best_action, best_score, best_moved_grid # moved_grid: mboard
 
 
-def add_new_tiles(grid,f_handler, depth=0):
+def expected_random_tile_score(grid,f_handler, depth=0):
     """
     compute expectimax score of depth<=3
     arg
@@ -137,120 +166,80 @@ def add_new_tiles(grid,f_handler, depth=0):
 
     return sum_score
 
-def play_game_N_times (queue, N=100000):
-    for i in range(N):
-        play_game(queue)
+def play_game_forever(f_handler):
+    while True:
+        tokens.get()
+        play_game(f_handler)
 
-def play_game(f_handler, game_class=Game2048, title='2048!', data_dir='save'):
-#def play_game(queue, f_handler, game_class=Game2048, title='2048!', data_dir='save'):
+
+
+def play_game(f_handler):
     # print("data_path: {}".format(data_dir))
     board_chain = []
     reward_chain = []
-    final_score = 0
-    pygame.init()
-    pygame.display.set_caption(title)
-    pygame.display.set_icon(game_class.icon(32))
-    clock = pygame.time.Clock()
-    os.makedirs(data_dir, exist_ok=True)
-    screen = pygame.display.set_mode((game_class.WIDTH, game_class.HEIGHT))
-    # screen = pygame.display.set_mode((50, 20))
-    manager = GameManager(Game2048, screen,
-                  os.path.join(data_dir, '2048.score'),
-                  os.path.join(data_dir, '2048.%d.state'))
-    # faster animation
-    manager.game.ANIMATION_FRAMES = 1
-    manager.game.WIN_TILE = 999999
-    # game loop
-    tick = 0
-    running = True
+    grid = get_initial_grid()
     count = 0
-    while running:
-        clock.tick(2000)
-        tick += 1
-        if tick % 2 == 0:
-            # t1 = time.time()
-            count+=1
-            #print("count: {}".format(count))
-            old_grid = deepcopy(manager.game.grid)
-            print(old_grid)
-            old_score = manager.game.score
-            best_action, best_score, moved_grid = findBestMove(old_grid, f_handler)
-            board_chain.append(moved_grid)
-            # t2 = time.time()
-            if best_action is None:
-                final_score = manager.game.score
-                reward = final_score - old_score
-                assert reward == 0, "The last reward wasn't Zero"
-                reward_chain.append(reward)
-                #print('The end. \n Score:{} / Max num: {}'.format(manager.game.score, np.max(manager.game.grid)))
-                break
-            #print(best_action)
-            e = EVENTS[best_action]
-            manager.dispatch(e)
-            new_score = manager.game.score
-            reward = new_score-old_score
+    game_score = 0
+    canMove = True
+    while canMove:
+        # t1 = time.time()
+        count+=1
+        #print("count: {}".format(count))
+        old_grid = deepcopy(grid)
+        best_action, best_score, moved_grid = findBestMove(old_grid, f_handler)
+        board_chain.append(moved_grid)
+        # t2 = time.time()
+        if best_action is None:
+            reward = 0
             reward_chain.append(reward)
-            #pprint(manager.game.grid, width=30)
-            #print(manager.game.score)
-            # t3 = time.time()
-            # print("Find best action: {}s , dispatch action: {}s".format(t2-t1, t3-t2))
+            #print('The end. \n Score:{} / Max num: {}'.format(manager.game.score, np.max(manager.game.grid)))
+            canMove = False
+            break
+        #print(best_action)
+        _, _, reward = move(grid, best_action)
+        game_score += reward
+        reward_chain.append(reward)
+        add_random_tile(grid)
+        #pprint(manager.game.grid, width=30)
+        #print(manager.game.score)
+        # t3 = time.time()
+        # print("Find best action: {}s , dispatch action: {}s".format(t2-t1, t3-t2))
+    episode = [board_chain, reward_chain, game_score]
+    episodes.put(episode)
+    return game_score
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.MOUSEBUTTONUP:
-                manager.dispatch(event)
-
-        manager.draw()
-    episode = [board_chain, reward_chain, final_score]
-    queue.put(episode)
-    manager.close()
-    pygame.quit()
-    return final_score
-
-def print_episode(queue):
-    episode = queue.get()
-    board_chain = episode[0]
-    reward_chain = episode[1]
-    final_score = episode[2]
-    print("board_length: {}, reward_length: {}, final_score: {}".format(len(board_chain), len(reward_chain), final_score))
-
-def print_episode_forever(queue):
+def batch_update_forever(batch_count, f_handler):
+    count =0
     while True:
-        print_episode(queue)
+        count+=1
+        batch_start = time.time()
+        [tokens.put('token') for i in range(10)]
+        batch_update(batch_count, f_handler)
+        print("Batch: {} / Time: {}".format(count, time.time()-batch_start))
 
-
-# def batch_update_forever(queue, f_handler):
-#     batch_count = 0
-#     max_avg_score = 0
-#     while True:
-#         batch_count += 1
-#         max_avg_score = batch_update(queue, batch_count, f_handler, max_avg_score)
-
-def batch_update(batch_count, f_handler, max_avg_score=0):
-#def batch_update(f_queue, queue, batch_count, f_handler, max_avg_score=0):
+def batch_update(batch_count, f_handler):
     batch_size=BATCH_SIZE
     dict = {}
     batch_score_sum=0
     for i in range(batch_size):
-        episode = queue.get()
+        episode = episodes.get()
         # print("Get {}-th episode, Game score: {}".format(i+1, episode[2]))
         batch_score_sum += episode[2]
         updateEvaluation(dict, episode, f_handler)
     batch_score_avg = batch_score_sum / float(batch_size)
-    print("Get {} episodes, start update, Average score: {}".format(batch_size, batch_score_avg))
+    # print("Get {} episodes, start update, Average score: {}".format(batch_size, batch_score_avg))
     with open("result.txt", "a") as f:
         f.write("batch count: {} / score: {}\n".format(batch_count, batch_score_avg))
-    print("Size of dict: {}".format(len(dict)))
+    # print("Size of dict: {}".format(len(dict)))
     for tuple_moved_board in dict.keys():
         moved_board = tuple_to_list(tuple_moved_board)
         delta = dict.get(tuple_moved_board)[0]
         f_handler.updateValue(np.array(moved_board), delta)
-    print("---update done, save the latest weights---")
+    # print("---update done, save the latest weights---")
 
     """DEBUG"""
     line_weight_0 = f_handler.featureSet[0].getWeight()[0][0]
-    print("update: Length of line weight 0: {}\n_______________________".format(len(line_weight_0)))
+    print("update: Length of line weight 0: {}\n".format(len(line_weight_0)))
 
     f_handler.saveWeights("saved_latest_weights.pickle")
     f_queue.put(f_handler)
@@ -261,7 +250,7 @@ def batch_update(batch_count, f_handler, max_avg_score=0):
     #     # weight_indices = np.where(f_handler.featureSet[0].getWeight() != 0)
     #     f_handler.saveWeights("saved_best_weights.pickle")
     del dict
-    print("update done")
+    # print("update done")
     return
 
     # return max_avg
@@ -342,17 +331,17 @@ if __name__ == "__main__":
     '''TD Learning Using Multiprocess W Pool'''
     batch_count = 0
 
-    for i in range(5):
-        print("Batch {}".format(i))
-        remove_state_files()
-        pool = Pool(processes=PROCESS_NUM + 1)
-        batch_st = time.time()
-        batch_count += 1
-        batch_st = time.time()
-        funcs = PROCESS_NUM * [(play_game, (f_handler, ))] \
-                + [(batch_update, (batch_count, f_handler))]
 
-        pool.map(proc_func, funcs)
-        f_handler = f_queue.get()
-        print("Time elapse for one batch: {}".format(time.time()-batch_st))
-        del pool
+    # remove_state_files()
+    pool = Pool(processes=PROCESS_NUM + 1)
+    batch_st = time.time()
+    batch_count += 1
+
+    batch_st = time.time()
+    funcs = PROCESS_NUM * [(play_game_forever, (f_handler, ))] \
+            + [(batch_update_forever, (batch_count, f_handler))]
+
+    pool.map(proc_func, funcs)
+    f_handler = f_queue.get()
+    print("Time elapse for one batch: {}".format(time.time()-batch_st))
+

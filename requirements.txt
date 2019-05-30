@@ -1,0 +1,8 @@
+2048
+appdirs
+certifi
+numpy
+pip
+pygame
+setuptools
+wheel

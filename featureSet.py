@@ -27,7 +27,8 @@ class SC_Linetuple(feature):
         return line_sum
 
     def updateScore(self, mboard, delta):
-        _delta = delta/self.num_of_tuples_float
+        # _delta = delta
+        _delta = delta / self.num_of_tuples_float
         for idx in range(4):
             r_dict = self.r_dict_list[idx]
             c_dict = self.c_dict_list[idx]
@@ -44,11 +45,14 @@ class SC_Linetuple(feature):
             # with open('weight_log.txt', 'a') as f:
             #     f.write("after update: {} \n".format(r_dict[row_key]))
 
+        # print("update dome, line weight 0 length: {}".format(len(self.tot_dict_list[0][0])))
+
     def get_key_value(self, _dict, _key):
         if _key in _dict:
             return _dict[_key]
-        _dict[_key] = 0 # initialized with 0
-        return _dict[_key]
+        else:
+            _dict[_key] = 0.1 # initialized with 0.1
+            return _dict[_key]
 
     def getWeight(self):
         return self.tot_dict_list
@@ -77,6 +81,7 @@ class SC_Rectuple(feature):
         return rec_sum
 
     def updateScore(self, mboard, delta):
+        # _delta = delta
         _delta = delta / self.num_of_tuples_float
         count = -1
         for r in range(3):
@@ -90,7 +95,7 @@ class SC_Rectuple(feature):
     def get_key_value(self, _dict, _key):
         if _key in _dict:
             return _dict[_key]
-        _dict[_key] = 0 # initialized with 0
+        _dict[_key] = 0.1 # initialized with 0.1
         return _dict[_key]
 
     def getWeight(self):
