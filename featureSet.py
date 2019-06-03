@@ -51,7 +51,7 @@ class SC_Linetuple(feature):
         if _key in _dict:
             return _dict[_key]
         else:
-            _dict[_key] = 0.1 # initialized with 0.1
+            _dict[_key] = 0.0 # initialized with 0.1
             return _dict[_key]
 
     def getWeight(self):
@@ -95,7 +95,7 @@ class SC_Rectuple(feature):
     def get_key_value(self, _dict, _key):
         if _key in _dict:
             return _dict[_key]
-        _dict[_key] = 0.1 # initialized with 0.1
+        _dict[_key] = 0.0 # initialized with 0.1
         return _dict[_key]
 
     def getWeight(self):

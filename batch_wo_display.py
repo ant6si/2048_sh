@@ -34,12 +34,12 @@ GET_DELTAS = [
 ]
 
 PROCESS_NUM = 10
-BATCH_SIZE = 10
-LEARNING_RATE = 0.01  # 0.01
+BATCH_SIZE = PROCESS_NUM
+LEARNING_RATE = 0.005  # 0.01
 DEPTH = 1
 
 episodes = Queue()
-f_queue = Queue()
+# f_queue = Queue()
 tokens = Queue()
 
 
@@ -166,10 +166,18 @@ def expected_random_tile_score(grid,f_handler, depth=0):
 
     return sum_score
 
-def play_game_forever(f_handler):
+def play_game_forever():
     while True:
         tokens.get()
-        play_game(f_handler)
+        print("token!")
+        my_f_handler = FeatureHandler()
+        my_f_handler.loadWeights("saved_latest_weights.pickle")
+        print("Load weight! Successful!")
+
+        # line_weight_0 = my_f_handler.featureSet[0].getWeight()[0][0]
+        # print("PLAYER_LOADED: Length of line weight 0: {}\n".format(len(line_weight_0)))
+        print("game!")
+        play_game(my_f_handler)
 
 
 
@@ -209,27 +217,48 @@ def play_game(f_handler):
     return game_score
 
 def batch_update_forever(batch_count, f_handler):
-    count =0
+    many_batch_sum = 0
+    many_batch_max = 0
+    many_batch_avg = 0
+    many_batch_size = 10
     while True:
-        count+=1
+        batch_count+=1
         batch_start = time.time()
-        [tokens.put('token') for i in range(10)]
-        batch_update(batch_count, f_handler)
-        print("Batch: {} / Time: {}".format(count, time.time()-batch_start))
+        [tokens.put('token') for i in range(PROCESS_NUM)]
+        batch_avg, batch_max = batch_update(batch_count, f_handler)
+
+        """Print batch results on console"""
+        print("Batch: {} / Time: {} / Avg: {} / Max {}".format(batch_count, time.time() - batch_start
+                                                               , batch_avg, batch_max))
+
+        """Print ten-batch results on """
+        many_batch_sum += batch_avg * BATCH_SIZE
+        if many_batch_max < batch_max:
+            many_batch_max = batch_max
+
+        if batch_count % many_batch_size == 0:
+            # print and reset
+            many_batch_avg = many_batch_sum / float(many_batch_size * BATCH_SIZE)
+            with open("result.txt", "a") as f:
+                f.write("Batch count\t\t{}\t\tAVG\t\t{}\t\tMAX\t\t{}\n".format(batch_count, many_batch_avg
+                                                                               , many_batch_max))
+            many_batch_max, many_batch_avg, many_batch_sum = 0, 0, 0
 
 def batch_update(batch_count, f_handler):
     batch_size=BATCH_SIZE
     dict = {}
     batch_score_sum=0
+    batch_max_score = 0
     for i in range(batch_size):
         episode = episodes.get()
         # print("Get {}-th episode, Game score: {}".format(i+1, episode[2]))
         batch_score_sum += episode[2]
+        if batch_max_score < episode[2]:
+            batch_max_score = episode[2]
         updateEvaluation(dict, episode, f_handler)
     batch_score_avg = batch_score_sum / float(batch_size)
     # print("Get {} episodes, start update, Average score: {}".format(batch_size, batch_score_avg))
-    with open("result.txt", "a") as f:
-        f.write("batch count: {} / score: {}\n".format(batch_count, batch_score_avg))
+
     # print("Size of dict: {}".format(len(dict)))
     for tuple_moved_board in dict.keys():
         moved_board = tuple_to_list(tuple_moved_board)
@@ -242,7 +271,8 @@ def batch_update(batch_count, f_handler):
     print("update: Length of line weight 0: {}\n".format(len(line_weight_0)))
 
     f_handler.saveWeights("saved_latest_weights.pickle")
-    f_queue.put(f_handler)
+    # [f_queue.put(f_handler) for iter in range(PROCESS_NUM)]
+
     # if max_avg <= batch_score_avg:
     #     print("---Find Maximum Weights and Save it---")
     #     print("Before max: {}/ After max: {}".format(max_avg, batch_score_avg))
@@ -251,7 +281,7 @@ def batch_update(batch_count, f_handler):
     #     f_handler.saveWeights("saved_best_weights.pickle")
     del dict
     # print("update done")
-    return
+    return batch_score_avg, batch_max_score
 
     # return max_avg
 
@@ -311,11 +341,8 @@ def remove_state_files():
             os.remove(rm_target)
             print("remove {}".format(rm_target))
 
-
-
 if __name__ == "__main__":
     f_handler = FeatureHandler()
-
     # """Load saved-weight"""
     # print("before load weight: {}".format(f_handler.featureSet[0].getWeight()))
     # print("---Load saved weights---")
@@ -330,18 +357,10 @@ if __name__ == "__main__":
 
     '''TD Learning Using Multiprocess W Pool'''
     batch_count = 0
-
-
+    # [f_queue.put(f_handler) for iter in range(PROCESS_NUM)]
     # remove_state_files()
     pool = Pool(processes=PROCESS_NUM + 1)
-    batch_st = time.time()
-    batch_count += 1
-
-    batch_st = time.time()
-    funcs = PROCESS_NUM * [(play_game_forever, (f_handler, ))] \
+    funcs = PROCESS_NUM * [(play_game_forever, ( ))] \
             + [(batch_update_forever, (batch_count, f_handler))]
-
     pool.map(proc_func, funcs)
-    f_handler = f_queue.get()
-    print("Time elapse for one batch: {}".format(time.time()-batch_st))
 

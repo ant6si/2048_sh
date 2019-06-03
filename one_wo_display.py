@@ -8,8 +8,8 @@ import _2048
 from _2048.game import Game2048
 from _2048.manager import GameManager
 from FeatureHandler import *
-from multiprocessing import Process, Queue, Pool
 from operation import *
+import queue
 
 # define events
 EVENTS = [
@@ -33,13 +33,14 @@ GET_DELTAS = [
   lambda r, c: ((r, i) for i in range(c + 1, 4))  # LEFT
 ]
 
-PROCESS_NUM = 10
+PROCESS_NUM = 1
 BATCH_SIZE = PROCESS_NUM
 LEARNING_RATE = 0.01  # 0.01
 DEPTH = 1
 
-episodes = Queue()
-f_queue = Queue()
+f_handler = FeatureHandler()
+episodes = queue.Queue()
+f_queue = queue.Queue()
 # tokens = Queue()
 
 
@@ -107,14 +108,14 @@ def move(grid, action):
     return grid, moved, sum
 
 
-def evaluation(grid, f_handler):
+def evaluation(grid):
     # evaluate the score of the grid
     grid = np.array(grid)
     grid_score = f_handler.getValue(grid)
     return grid_score
 
 
-def findBestMove(grid, f_handler, depth=0):
+def findBestMove(grid, depth=0):
     # Find Best Move
     # Expectimax Search for depth 1
     best_score = -np.inf
@@ -127,7 +128,7 @@ def findBestMove(grid, f_handler, depth=0):
         if not moved:
             continue
 
-        new_score = expected_random_tile_score(moved_grid, f_handler, depth+1)
+        new_score = expected_random_tile_score(moved_grid, depth+1)
         if new_score >= best_score:
             best_moved_grid = deepcopy(moved_grid)
             best_score = new_score
@@ -136,7 +137,7 @@ def findBestMove(grid, f_handler, depth=0):
     return best_action, best_score, best_moved_grid # moved_grid: mboard
 
 
-def expected_random_tile_score(grid,f_handler, depth=0):
+def expected_random_tile_score(grid, depth=0):
     """
     compute expectimax score of depth<=3
     arg
@@ -148,7 +149,7 @@ def expected_random_tile_score(grid,f_handler, depth=0):
     fcs = free_cells(grid)
     n_empty = len(fcs)
     if depth >= DEPTH:
-        return evaluation(grid, f_handler)
+        return evaluation(grid)
 
     sum_score = 0
     for x, y in fcs:
@@ -166,15 +167,8 @@ def expected_random_tile_score(grid,f_handler, depth=0):
 
     return sum_score
 
-def play_game_forever():
-    while True:
-        # tokens.get()
-        my_f_handler = f_queue.get()
-        play_game(my_f_handler)
 
-
-
-def play_game(f_handler):
+def play_game():
     # print("data_path: {}".format(data_dir))
     board_chain = []
     reward_chain = []
@@ -187,7 +181,7 @@ def play_game(f_handler):
         count+=1
         #print("count: {}".format(count))
         old_grid = deepcopy(grid)
-        best_action, best_score, moved_grid = findBestMove(old_grid, f_handler)
+        best_action, best_score, moved_grid = findBestMove(old_grid)
         board_chain.append(moved_grid)
         # t2 = time.time()
         if best_action is None:
@@ -209,35 +203,7 @@ def play_game(f_handler):
     episodes.put(episode)
     return game_score
 
-def batch_update_forever(batch_count, f_handler):
-    many_batch_sum = 0
-    many_batch_max = 0
-    many_batch_avg = 0
-    many_batch_size = 10
-    while True:
-        batch_count+=1
-        batch_start = time.time()
-        # [tokens.put('token') for i in range(PROCESS_NUM)]
-        batch_avg, batch_max = batch_update(batch_count, f_handler)
-
-        """Print batch results on console"""
-        print("Batch: {} / Time: {} / Avg: {} / Max {}".format(batch_count, time.time() - batch_start
-                                                               , batch_avg, batch_max))
-
-        """Print ten-batch results on """
-        many_batch_sum += batch_avg * BATCH_SIZE
-        if many_batch_max < batch_max:
-            many_batch_max = batch_max
-
-        if batch_count % many_batch_size == 0:
-            # print and reset
-            many_batch_avg = many_batch_sum / float(many_batch_size * BATCH_SIZE)
-            with open("result.txt", "a") as f:
-                f.write("Batch count\t\t{}\t\tAVG\t\t{}\t\tMAX\t\t{}\n".format(batch_count, many_batch_avg
-                                                                               , many_batch_max))
-            many_batch_max, many_batch_avg, many_batch_sum = 0, 0, 0
-
-def batch_update(batch_count, f_handler):
+def batch_update():
     batch_size=BATCH_SIZE
     dict = {}
     batch_score_sum=0
@@ -248,7 +214,7 @@ def batch_update(batch_count, f_handler):
         batch_score_sum += episode[2]
         if batch_max_score < episode[2]:
             batch_max_score = episode[2]
-        updateEvaluation(dict, episode, f_handler)
+        updateEvaluation(dict, episode)
     batch_score_avg = batch_score_sum / float(batch_size)
     # print("Get {} episodes, start update, Average score: {}".format(batch_size, batch_score_avg))
 
@@ -261,10 +227,9 @@ def batch_update(batch_count, f_handler):
 
     """DEBUG"""
     line_weight_0 = f_handler.featureSet[0].getWeight()[0][0]
-    print("update: Length of line weight 0: {}\n".format(len(line_weight_0)))
+    # print("update: Length of line weight 0: {}\n".format(len(line_weight_0)))
 
-    f_handler.saveWeights("saved_latest_weights.pickle")
-    [f_queue.put(f_handler) for iter in range(PROCESS_NUM)]
+    f_handler.saveWeights("one_saved_latest_weights.pickle")
 
     # if max_avg <= batch_score_avg:
     #     print("---Find Maximum Weights and Save it---")
@@ -278,7 +243,7 @@ def batch_update(batch_count, f_handler):
 
     # return max_avg
 
-def updateEvaluation(dict, episode, f_handler):
+def updateEvaluation(dict, episode):
     board_chain = episode[0]
     reward_chain = episode[1]
     chain_len = len(board_chain)
@@ -298,11 +263,11 @@ def updateEvaluation(dict, episode, f_handler):
             reward = reward_chain[i+j]
 
             #reward = v[i+j][1]
-            G_t_lambda += weight * (reward + evaluation(board_chain[i + j], f_handler))
+            G_t_lambda += weight * (reward + evaluation(board_chain[i + j]))
             # score += weight * (reward + evaluation(v[i+j][2]))
             j += 1
         # print("score: {}, value: {}".format(G_t_lambda, evaluation(board_chain[i])))
-        delta = LEARNING_RATE * (G_t_lambda - evaluation(board_chain[i], f_handler))
+        delta = LEARNING_RATE * (G_t_lambda - evaluation(board_chain[i]))
         # print(delta);
         tuple_board = list_to_tuple(board_chain[i])
         if tuple_board in dict:
@@ -335,12 +300,11 @@ def remove_state_files():
             print("remove {}".format(rm_target))
 
 if __name__ == "__main__":
-    f_handler = FeatureHandler()
 
     # """Load saved-weight"""
     # print("before load weight: {}".format(f_handler.featureSet[0].getWeight()))
     # print("---Load saved weights---")
-    # f_handler.loadWeights("saved_latest_weights.pickle")
+    # f_handler.loadWeights("one_saved_latest_weights.pickle")
     # line_weight = f_handler.featureSet[0].getWeight()
     # # print("after load weight: {}".format(load_weight_indices))
     # with open('weight_check.txt', 'w') as f:
@@ -349,12 +313,45 @@ if __name__ == "__main__":
     #         b = int(i%4)
     #         f.write("{}\n".format(line_weight[a][b]))
 
-    '''TD Learning Using Multiprocess W Pool'''
-    batch_count = 0
-    [f_queue.put(f_handler) for iter in range(PROCESS_NUM)]
-    # remove_state_files()
-    pool = Pool(processes=PROCESS_NUM + 1)
-    funcs = PROCESS_NUM * [(play_game_forever, ( ))] \
-            + [(batch_update_forever, (batch_count, f_handler))]
-    pool.map(proc_func, funcs)
+    '''TD Learning Without Using Multiprocess'''
+    count = 0
+    score_sum = 0
+    tot_max = 0
+    partial_max = 0
+    tw_max = 0
+    tw_sum = 0
+    while True:
+        count += 1
+        st = time.time()
+        score = play_game()
+        st_p = time.time()
+        # statistics
+        score_sum += score
+        tw_sum += score
+        if tot_max < score:
+            tot_max = score
+        if tw_max < score:
+            tw_max = score
+        if partial_max < score:
+            partial_max = score
+
+
+        batch_update()
+        et = time.time()
+
+        if count % 20 == 0:
+            tw_avg = tw_sum / 20.0
+            tw_sum = 0
+            print("count\t{}\tAVG(20)\t{}\tMAX(20)\t{} MAX(tot)\t{}".format(count,tw_avg, tw_max, tot_max))
+            tw_max = 0
+
+
+        if count %100 == 0:
+            avg_score = score_sum / 100.0
+            score_sum = 0
+            partial_max = 0
+
+            with open("one_result.txt", "a") as f:
+                f.write("count\t\t{}\t\tAVG\t\t{}\t\tMAX\t\t{}\n".format(count, avg_score
+                                                                               , partial_max))
 
