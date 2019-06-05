@@ -1,5 +1,6 @@
 import sys
 sys.path.append("../")
+import os.path
 
 import numpy as np
 from operation import *
@@ -19,7 +20,10 @@ class FeatureHandler(object):
         self.lineTuple = lineTuple()
         self.SC_LineTuples = SC_Linetuple()
         self.SC_RecTuples = SC_Rectuple()
-        self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
+        self.SC_2_mono = SC_2_Monotonicity()
+        self.SC_2_big = SC_2_Biggest_tile()
+        # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
+        self.featureSet = [self.SC_LineTuples, self.SC_RecTuples, self.SC_2_mono, self.SC_2_big]
         #self.featureSet = [ self.mergeableTile]
         # self.featureSet = [self.emptyTile, self.lineTuple, self.recTangle,self.axe , self.maxTile, self.layerTile,
         #                    self.distinctTile, self.mergeableTile]
@@ -77,10 +81,13 @@ class FeatureHandler(object):
             # self.featureSet[idx].updateScore(board, delta)
 
     def loadWeights(self, weight_file):
-        with open(weight_file, 'rb') as f:
-            weights = pickle.load(f)
-        for idx in range(len(self.featureSet)):
-            self.featureSet[idx].loadWeight(weights[idx])
+        if os.path.exists(weight_file):
+            with open(weight_file, 'rb') as f:
+                weights = pickle.load(f)
+            for idx in range(len(self.featureSet)):
+                self.featureSet[idx].loadWeight(weights[idx])
+        else:
+            print("File Not Exists, make new weight_file")
 
 
     def saveWeights(self, file_name):

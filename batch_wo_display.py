@@ -1,23 +1,24 @@
-import os, pygame, time, random, math
+import os,time, random, math
+# import pygame
 os.environ['SDL_AUDIODRIVER'] = 'dsp'
 
 from copy import deepcopy
-from pprint import pprint
-import numpy as np
-import _2048
-from _2048.game import Game2048
-from _2048.manager import GameManager
+# from pprint import pprint
+# import numpy as np
+# import _2048
+# from _2048.game import Game2048
+# from _2048.manager import GameManager
 from FeatureHandler import *
 from multiprocessing import Process, Queue, Pool
 from operation import *
 
 # define events
-EVENTS = [
-  pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_UP}),   # UP
-  pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_RIGHT}),  # RIGHT
-  pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_DOWN}),  # DOWN
-  pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_LEFT})  # LEFT
-]
+# EVENTS = [
+#   pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_UP}),   # UP
+#   pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_RIGHT}),  # RIGHT
+#   pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_DOWN}),  # DOWN
+#   pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_LEFT})  # LEFT
+# ]
 
 CELLS = [
   [(r, c) for c in range(4) for r in range(4)],  # UP
@@ -37,6 +38,7 @@ PROCESS_NUM = 10
 BATCH_SIZE = PROCESS_NUM
 LEARNING_RATE = 0.005  # 0.01
 DEPTH = 1
+weight_file_name = "wo_disp_SC_2.pickle"
 
 episodes = Queue()
 # f_queue = Queue()
@@ -169,16 +171,14 @@ def expected_random_tile_score(grid,f_handler, depth=0):
 def play_game_forever():
     while True:
         tokens.get()
-        print("token!")
+        # print("token!")
         my_f_handler = FeatureHandler()
-        my_f_handler.loadWeights("saved_latest_weights.pickle")
-        print("Load weight! Successful!")
+        my_f_handler.loadWeights(weight_file_name)
+        # print("Load weight! Successful!")
 
         # line_weight_0 = my_f_handler.featureSet[0].getWeight()[0][0]
         # print("PLAYER_LOADED: Length of line weight 0: {}\n".format(len(line_weight_0)))
-        print("game!")
         play_game(my_f_handler)
-
 
 
 def play_game(f_handler):
@@ -267,10 +267,10 @@ def batch_update(batch_count, f_handler):
     # print("---update done, save the latest weights---")
 
     """DEBUG"""
-    line_weight_0 = f_handler.featureSet[0].getWeight()[0][0]
+    line_weight_0 = f_handler.featureSet[0].getWeight()[0]
     print("update: Length of line weight 0: {}\n".format(len(line_weight_0)))
 
-    f_handler.saveWeights("saved_latest_weights.pickle")
+    f_handler.saveWeights(weight_file_name)
     # [f_queue.put(f_handler) for iter in range(PROCESS_NUM)]
 
     # if max_avg <= batch_score_avg:
@@ -346,7 +346,7 @@ if __name__ == "__main__":
     # """Load saved-weight"""
     # print("before load weight: {}".format(f_handler.featureSet[0].getWeight()))
     # print("---Load saved weights---")
-    # f_handler.loadWeights("saved_latest_weights.pickle")
+    # f_handler.loadWeights(weight_file_name)
     # line_weight = f_handler.featureSet[0].getWeight()
     # # print("after load weight: {}".format(load_weight_indices))
     # with open('weight_check.txt', 'w') as f:

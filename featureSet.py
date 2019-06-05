@@ -7,6 +7,119 @@ from operation import *
 from feature import feature
 
 
+
+class SC_2_Biggest_tile(feature):
+    def __init__(self):
+        # [dict_1, dict_2, dict_3, dict_4]
+        self.big_dict = {}
+        self.num_of_tuples_float = 1.0
+
+    def getScore(self, mboard):
+        big_key = self.get_big_key(mboard)
+        return self.get_key_value(self.big_dict, big_key)
+
+
+    def updateScore(self, mboard, delta):
+        # _delta = delta
+        _delta = delta / self.num_of_tuples_float
+
+        big_dict = self.big_dict
+        big_key = self.get_big_key(mboard)
+        big_value = self.get_key_value(big_dict, big_key)
+        big_dict[big_key] = big_value + _delta
+
+    def get_big_key(self, mboard):
+        biggest = np.max(mboard)
+        big_key = [biggest]
+
+        temp_board = mboard.T
+        temp_board2 = temp_board[::-1]
+        reverse_board = temp_board2.T
+
+        big_indices = np.where(reverse_board == biggest)
+        big_key.append(big_indices[0][big_indices[0].size - 1])
+        big_key.append(3 - big_indices[1][big_indices[1].size - 1])
+
+        return tuple(big_key)
+
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
+        else:
+            _dict[_key] = 0.0 # initialized with 0.1
+            return _dict[_key]
+
+    def getWeight(self):
+        return self.big_dict
+
+    def loadWeight(self, weight):
+        self.big_dict = weight
+
+
+class SC_2_Monotonicity(feature):
+    def __init__(self):
+        # [dict_1, dict_2, dict_3, dict_4]
+        mono_dict_0, mono_dict_1, mono_dict_2 = {}, {}, {}
+
+        self.mono_dict_list = [mono_dict_0, mono_dict_1, mono_dict_2]
+        self.num_of_tuples_float = 3.0
+
+    def getScore(self, mboard):
+        mono_sum = 0
+        for idx in range(3):
+            idx_dict = self.mono_dict_list[idx]
+            idx_key = self.get_mono_key(mboard, idx)
+            mono_sum += self.get_key_value(idx_dict, idx_key)  # row_wise
+        return mono_sum
+
+    def updateScore(self, mboard, delta):
+        # _delta = delta
+        _delta = delta / self.num_of_tuples_float
+        for idx in range(3):
+            idx_dict = self.mono_dict_list[idx]
+            idx_key = self.get_mono_key(mboard, idx)
+            idx_value = self.get_key_value(idx_dict, idx_key)
+            idx_dict[idx_key] = idx_value + _delta
+
+
+    def get_mono_key(self, mboard, dic_num):
+
+        num_list = []
+        if dic_num == 0:
+            num_list = np.r_[mboard[3], mboard[2][::-1]]
+            # print(num_list)
+        if dic_num == 1:
+            num_list = np.r_[mboard[2][::-1], mboard[1]]
+            # print(num_list)
+        if dic_num == 2:
+            num_list = np.r_[mboard[1], mboard[0][::-1]]
+            # print(num_list)
+        mono_list = list()
+        mono_list.append(np.max(mboard))
+        for idx in range(num_list.size - 1):
+            if num_list[idx] > num_list[idx + 1]:
+                mono_list.append(1)
+            if num_list[idx] == num_list[idx + 1]:
+                mono_list.append(0)
+            if num_list[idx] < num_list[idx + 1]:
+                mono_list.append(-1)
+
+        return tuple(mono_list)
+
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
+        else:
+            _dict[_key] = 0.0 # initialized with 0.1
+            return _dict[_key]
+
+    def getWeight(self):
+        return self.mono_dict_list
+
+    def loadWeight(self, weight):
+        self.mono_dict_list = weight
+
+
 class SC_Linetuple(feature):
     def __init__(self):
         # [dict_1, dict_2, dict_3, dict_4]
