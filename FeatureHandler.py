@@ -22,8 +22,8 @@ class FeatureHandler(object):
         self.SC_RecTuples = SC_Rectuple()
         self.SC_2_mono = SC_2_Monotonicity()
         self.SC_2_big = SC_2_Biggest_tile()
-        # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
-        self.featureSet = [self.SC_LineTuples, self.SC_RecTuples, self.SC_2_mono, self.SC_2_big]
+        self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
+        # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples, self.SC_2_mono, self.SC_2_big]
         #self.featureSet = [ self.mergeableTile]
         # self.featureSet = [self.emptyTile, self.lineTuple, self.recTangle,self.axe , self.maxTile, self.layerTile,
         #                    self.distinctTile, self.mergeableTile]
