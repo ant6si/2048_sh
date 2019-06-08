@@ -8,7 +8,7 @@ class feature():
     def __init__(self):
         pass
 
-    def getIndex(self, board, num):
+    def getKey(self, board, num):
         pass
 
     def updateScore(self, board, delta):
