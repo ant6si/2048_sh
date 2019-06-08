@@ -863,7 +863,7 @@ class HW_mergeableTileCount(feature):
         key = 0
         for i in range(3):
             key += np.sum(tuple(board[i])==tuple(board[i+1]))
-            key += np.sum(tuple(board[:, i]==tuple(board[:, i+1])
+            key += np.sum(tuple(board[:, i]==tuple(board[:, i+1]))
         return key
 
     def updateScore(self, board, delta):
