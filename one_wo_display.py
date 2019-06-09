@@ -320,6 +320,7 @@ if __name__ == "__main__":
     partial_max = 0
     tw_max = 0
     tw_sum = 0
+    training_st = time.time()
     while True:
         count += 1
         st = time.time()
@@ -342,7 +343,8 @@ if __name__ == "__main__":
         if count % 20 == 0:
             tw_avg = tw_sum / 20.0
             tw_sum = 0
-            print("count\t{}\tAVG(20)\t{}\tMAX(20)\t{} MAX(tot)\t{}".format(count,tw_avg, tw_max, tot_max))
+            time_elapse = time.time()-training_st
+            print("time\t{:.2f}\tcount\t{}\tAVG(20)\t{}\tMAX(20)\t{} MAX(tot)\t{}".format(time_elapse,count,tw_avg, tw_max, tot_max))
             tw_max = 0
 
 
@@ -350,8 +352,8 @@ if __name__ == "__main__":
             avg_score = score_sum / 100.0
             score_sum = 0
             partial_max = 0
-
+            time_elapse = time.time() - training_st
             with open("one_result.txt", "a") as f:
-                f.write("count\t\t{}\t\tAVG\t\t{}\t\tMAX\t\t{}\n".format(count, avg_score
+                f.write("time\t\t{:.2f}\t\tcount\t\t{}\t\tAVG\t\t{}\t\tMAX\t\t{}\n".format(time_elapse, count, avg_score
                                                                                , partial_max))
 
