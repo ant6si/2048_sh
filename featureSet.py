@@ -980,18 +980,4 @@ class HW_layerTileCount(feature):
         self.layerTile = weight
 
 if __name__=='__main__':
-    board = np.array([0,2,2,2,0,2,2,2,2,2,2,2,2,2,2,2]).reshape([4,4])
-    my_tuple = HW_layerTileCount()
-
-    print("befor getScore: ", my_tuple.layerTile)
-    value_before = my_tuple.getScore(board)
-    print("value_before:", value_before)
-    print("after getScore: ", my_tuple.layerTile)
-
-    my_tuple.updateScore(board, 1)
-    print("after updateScore: ", my_tuple.layerTile)
-
-    value_after = my_tuple.getScore(board)
-    print(my_tuple.layerTile)
-
-    print(value_after)
+    pass
