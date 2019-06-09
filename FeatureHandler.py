@@ -9,15 +9,6 @@ import pickle
 
 class FeatureHandler(object):
     def __init__(self):
-        self.combineMax = combineMaxTileCount()
-        self.mergeableTile = mergeableTileCount()
-        self.distinctTile = distinctTileCount()
-        self.emptyTile = emptyTileCount()
-        self.maxTile = maxTileCount()
-        self.layerTile = layerTileCount()
-        self.axe = axeTuple()
-        self.recTangle = recTangTuple()
-        self.lineTuple = lineTuple()
         self.SC_LineTuples = SC_Linetuple()
         self.SC_RecTuples = SC_Rectuple()
         self.SC_2_mono = SC_2_Monotonicity()
@@ -33,7 +24,7 @@ class FeatureHandler(object):
         self.HW_distinct = HW_distinctTileCount()
         self.HW_empty = HW_emptyTileCount()
 
-        self.featureSet = [self.lineTuple]
+        self.featureSet = [self.HW_linetuple]
 
         # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
         # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples, self.SC_2_mono, self.SC_2_big]
