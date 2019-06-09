@@ -27,13 +27,14 @@ class FeatureHandler(object):
         self.HW_linetuple = HW_lineTuple()
         self.HW_rectuple = HW_recTangTuple()
         self.HW_axetuple = HW_axeTuple()
-        self.HW_mergeable = HW_mergeableTileCount()
         self.HW_max = HW_maxTileCount()
+        self.HW_mergeable = HW_mergeableTileCount()
         self.HW_layer = HW_layerTileCount()
         self.HW_distinct = HW_distinctTileCount()
         self.HW_empty = HW_emptyTileCount()
 
-        self.featureSet = [self.lineTuple]
+        self.featureSet = [self.HW_linetuple, self.HW_rectuple, self.HW_axetuple, self.HW_max,
+                           self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]
 
         # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
         # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples, self.SC_2_mono, self.SC_2_big]

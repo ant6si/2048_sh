@@ -226,7 +226,7 @@ def batch_update():
     # print("---update done, save the latest weights---")
 
     """DEBUG"""
-    line_weight_0 = f_handler.featureSet[0].getWeight()[0][0]
+    # line_weight_0 = f_handler.featureSet[0].getWeight()[0][0]
     # print("update: Length of line weight 0: {}\n".format(len(line_weight_0)))
 
     f_handler.saveWeights("one_saved_latest_weights.pickle")

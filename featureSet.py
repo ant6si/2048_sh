@@ -627,7 +627,8 @@ class layerTileCount(feature):
 
 class HW_lineTuple(feature):
     def __init__(self):
-        self.fourTuple = {}
+        fourTuple={}
+        self.fourTuple = [fourTuple]
 
     def getKey(self, board, num):
         if (num != 0 and num != 1):
@@ -637,46 +638,43 @@ class HW_lineTuple(feature):
         return key
 
     def updateScore(self, board, delta):
-        # print("update LineTuple")
-        self.boards = self.getRotateBoards()  # get 4 boards
+        # print("dict type2: {}".format(type(self.fourTuple[0])))
+        self.boards = board
 
-        for i in range(4):
-            for j in range(2):
-                key = self.getKey(self.boards[i], j)
-                symmetricKey = key[::-1]
+        for j in range(2):
+            key = self.getKey(self.boards, j)
+            symmetricKey = key[::-1]
 
-                ##
-                self.fourTuple[key] = self.get_key_value(self.fourTuple, key) + delta
+            ##
+            self.fourTuple[0][key] = self.get_key_value(self.fourTuple[0], key) + delta
 
-                if symmetricKey != key:
-                    self.fourTuple[symmetricKey] = self.get_key_value(self.fourTuple, symmetricKey) + delta
+            if symmetricKey != key:
+                self.fourTuple[0][symmetricKey] = self.get_key_value(self.fourTuple[0], symmetricKey) + delta
 
     def getScore(self, board):
-        self.boards = self.getRotateBoards()  # ? rotate 가 안되는 것 같은데요?
+        # print("dict type1: {}".format(type(self.fourTuple[0])))
 
+        self.boards = board
         sum = 0.0
-        for i in range(4):
-            # 取num=0，1的index
-            for j in range(2):
-                key = self.getKey(self.boards[i], j)
-                symmetricKey = key[::-1]
 
-                sum += self.get_key_value(self.fourTuple, key)
-
-                if symmetricKey != key:
-                    sum += self.get_key_value(self.fourTuple, symmetricKey)
+        for j in range(2):
+            key = self.getKey(self.boards, j)
+            symmetricKey = key[::-1]
+            sum += self.get_key_value(self.fourTuple[0], key)
+            if symmetricKey != key:
+                sum += self.get_key_value(self.fourTuple[0], symmetricKey)
         return sum
 
     def get_key_value(self, _dict, _key):
         if _key in _dict:
             return _dict[_key]
         else:
-            _dict[_key] = 0.0 # initialized with 0.1
+            _dict.update({_key: 0.0})
             return _dict[_key]
 
 
     def getWeight(self):
-        return [self.fourTuple]
+        return self.fourTuple
 
     def loadWeight(self, weight):
         self.fourTuple = weight
@@ -684,7 +682,8 @@ class HW_lineTuple(feature):
 
 class HW_recTangTuple(feature):
     def __init__(self):
-        self.sixTuple = {}
+        sixTuple = {}
+        self.sixTuple = [sixTuple]
 
     def getKey(self, board, num):
         if (num!=0 and num!=1):
@@ -697,31 +696,29 @@ class HW_recTangTuple(feature):
 
     def updateScore(self, board, delta):
         # print("update recTangTuple")
-        self.boards = self.getRotateBoards()
+        self.boards = board
 
-        for i in range(4):
-            for j in range(2):
-                key1 = self.getKey(self.boards[i], j)
-                key2 = self.getKey(reverseRow(self.boards[i]),j)
-                if key1==key2 and j==1:
-                    self.sixTuple[key1] = self.get_key_value(self.sixTuple, key1) + delta
-                else:
-                    self.sixTuple[key1] = self.get_key_value(self.sixTuple, key1) + delta
-                    self.sixTuple[key2] = self.get_key_value(self.sixTuple, key2) + delta
+        for j in range(2):
+            key1 = self.getKey(self.boards, j)
+            key2 = self.getKey(reverseRow(self.boards),j)
+            if key1==key2 and j==1:
+                self.sixTuple[0][key1] = self.get_key_value(self.sixTuple[0], key1) + delta
+            else:
+                self.sixTuple[0][key1] = self.get_key_value(self.sixTuple[0], key1) + delta
+                self.sixTuple[0][key2] = self.get_key_value(self.sixTuple[0], key2) + delta
         # print("update recTangTuple Done")
 
     def getScore(self, board):
-        self.boards = self.getRotateBoards()
+        self.boards = board
 
         sum = 0.0
-        for i in range(4):
-            key1 = self.getKey(self.boards[i], 0)
-            key2 = self.getKey(self.boards[i], 1)
-            key3 = self.getKey(reverseRow(self.boards[i]), 0)
+        key1 = self.getKey(self.boards, 0)
+        key2 = self.getKey(self.boards, 1)
+        key3 = self.getKey(reverseRow(self.boards), 0)
 
-            sum += self.get_key_value(self.sixTuple, key1)
-            sum += self.get_key_value(self.sixTuple, key2)
-            sum += self.get_key_value(self.sixTuple, key3)
+        sum += self.get_key_value(self.sixTuple[0], key1)
+        sum += self.get_key_value(self.sixTuple[0], key2)
+        sum += self.get_key_value(self.sixTuple[0], key3)
         return sum
 
     def get_key_value(self, _dict, _key):
@@ -740,7 +737,8 @@ class HW_recTangTuple(feature):
 
 class HW_axeTuple(feature):
     def __init__(self):
-        self.sixTuple = {}
+        sixTuple = {}
+        self.sixTuple = [sixTuple]
 
     def getKey(self, board, num):
         if num>=3:
@@ -752,28 +750,26 @@ class HW_axeTuple(feature):
 
     def updateScore(self, board, delta):
         # print("update axeTuple")
+        self.boards = board
 
-        self.boards = self.getRotateBoards()
-        for i in range(4):
-            for j in range(3):
-                key1 = self.getKey(self.boards[i], j)
-                key2 = self.getKey(reverseRow(self.boards[i]),j)
+        for j in range(3):
+            key1 = self.getKey(self.boards, j)
+            key2 = self.getKey(reverseRow(self.boards),j)
 
-                self.sixTuple[key1] = self.get_key_value(self.sixTuple, key1) + delta
-                self.sixTuple[key2] = self.get_key_value(self.sixTuple, key2) + delta
+            self.sixTuple[0][key1] = self.get_key_value(self.sixTuple[0], key1) + delta
+            self.sixTuple[0][key2] = self.get_key_value(self.sixTuple[0], key2) + delta
         # print("update axeTuple Done")
 
     def getScore(self, board):
-        self.boards = self.getRotateBoards()
+        self.boards = board
 
         sum = 0.0
-        for i in range(4):
-            for j in range(3):
-                key1 = self.getKey(self.boards[i],j)
-                key2 = self.getKey(reverseRow(self.boards[i]), j)
+        for j in range(3):
+            key1 = self.getKey(self.boards,j)
+            key2 = self.getKey(reverseRow(self.boards), j)
 
-                sum += self.get_key_value(self.sixTuple, key1)
-                sum += self.get_key_value(self.sixTuple, key2)
+            sum += self.get_key_value(self.sixTuple[0], key1)
+            sum += self.get_key_value(self.sixTuple[0], key2)
         return sum
 
     def get_key_value(self, _dict, _key):
@@ -789,9 +785,11 @@ class HW_axeTuple(feature):
     def loadWeight(self, weight):
         self.sixTuple = weight
 
+
 class HW_maxTileCount(feature):
     def __init__(self):
-        self.maxTile = {}
+        maxTile = {}
+        self.maxTile = [maxTile]
 
     def getKey(self, board, num=0):
         board = tuple(board.reshape([1, -1]).tolist())
@@ -803,12 +801,12 @@ class HW_maxTileCount(feature):
     def updateScore(self, board, delta):
         # print("update MaxTileCount")
         key = self.getKey(board, 0)
-        self.maxTile[key] = self.get_key_value(self.maxTile, key) + delta
+        self.maxTile[0][key] = self.get_key_value(self.maxTile[0], key) + delta
         # print("update MaxTileCount Done")
 
     def getScore(self, board):
         key = self.getKey(board, 0)
-        return self.get_key_value(self.maxTile, key)
+        return self.get_key_value(self.maxTile[0], key)
 
     def get_key_value(self, _dict, _key):
         if _key in _dict:
@@ -823,9 +821,11 @@ class HW_maxTileCount(feature):
     def loadWeight(self, weight):
         self.maxTile = weight
 
+
 class HW_emptyTileCount(feature):
     def __init__(self):
-        self.emptyTile = {}
+        emptyTile = {}
+        self.emptyTile = [emptyTile]
 
     # 返回0个数
     def getKey(self, board, num=0):
@@ -837,13 +837,13 @@ class HW_emptyTileCount(feature):
     def updateScore(self, board, delta):
         # print("update emptyTileCount")
         key = self.getKey(board, 0)
-        self.emptyTile[key] = self.get_key_value(self.emptyTile, key) + delta
+        self.emptyTile[0][key] = self.get_key_value(self.emptyTile[0], key) + delta
        # print("update emptyTileCount done")
 
     # e.g. 返回有2个0 对应的weight
     def getScore(self, board):
         key = self.getKey(board, 0)
-        return self.get_key_value(self.emptyTile, key)
+        return self.get_key_value(self.emptyTile[0], key)
 
     def get_key_value(self, _dict, _key):
         if _key in _dict:
@@ -860,7 +860,8 @@ class HW_emptyTileCount(feature):
 
 class HW_mergeableTileCount(feature):
     def __init__(self):
-        self.mergeableTile= {}
+        mergeableTile = {}
+        self.mergeableTile= [mergeableTile]
 
     def getKey(self, board, num):
         key = 0
@@ -872,12 +873,12 @@ class HW_mergeableTileCount(feature):
     def updateScore(self, board, delta):
         # print("update mergeableTileCount")
         key = self.getKey(board, 0)
-        self.mergeableTile[key] = self.get_key_value(self.mergeableTile, key) + delta
+        self.mergeableTile[0][key] = self.get_key_value(self.mergeableTile[0], key) + delta
         # print("update mergeableTileCount done")
 
     def getScore(self, board):
         key = self.getKey(board, 0)
-        return self.get_key_value(self.mergeableTile, key)
+        return self.get_key_value(self.mergeableTile[0], key)
 
     def get_key_value(self, _dict, _key):
         if _key in _dict:
@@ -894,7 +895,8 @@ class HW_mergeableTileCount(feature):
 
 class HW_distinctTileCount(feature):
     def __init__(self):
-        self.distinctTile = {}
+        distinctTile = {}
+        self.distinctTile = [distinctTile]
 
     def getKey(self, board, num):
         # bitset = 0
@@ -916,12 +918,12 @@ class HW_distinctTileCount(feature):
     def updateScore(self, board, delta):
         # print("update distinctTileCount")
         key = self.getKey(board, 0)
-        self.distinctTile[key] = self.get_key_value(self.distinctTile, key) + delta
+        self.distinctTile[0][key] = self.get_key_value(self.distinctTile[0], key) + delta
         # print("update distinctTileCount done")
 
     def getScore(self, board):
         key = self.getKey(board, 0)
-        return self.get_key_value(self.distinctTile, key)
+        return self.get_key_value(self.distinctTile[0], key)
 
     def get_key_value(self, _dict, _key):
         if _key in _dict:
@@ -938,7 +940,8 @@ class HW_distinctTileCount(feature):
 
 class HW_layerTileCount(feature):
     def __init__(self):
-        self.layerTile = {}
+        layerTile = {}
+        self.layerTile = [layerTile]
 
     def getKey(self, board, num):
         index = 0
@@ -959,12 +962,12 @@ class HW_layerTileCount(feature):
     def updateScore(self, board, delta):
         # print("update layerTileCount")
         key = self.getKey(board, 0)
-        self.layerTile[key] = self.get_key_value(self.layerTile, key) + delta
+        self.layerTile[0][key] = self.get_key_value(self.layerTile[0], key) + delta
         # print("update layerTileCount done")
 
     def getScore(self, board):
         key = self.getKey(board, 0)
-        return self.get_key_value(self.layerTile, key)
+        return self.get_key_value(self.layerTile[0], key)
 
     def get_key_value(self, _dict, _key):
         if _key in _dict:
@@ -974,7 +977,7 @@ class HW_layerTileCount(feature):
             return _dict[_key]
 
     def getWeight(self):
-        return layerTileCount
+        return self.layerTile
 
     def loadWeight(self, weight):
         self.layerTile = weight
