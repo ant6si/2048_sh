@@ -22,7 +22,20 @@ class FeatureHandler(object):
         self.SC_RecTuples = SC_Rectuple()
         self.SC_2_mono = SC_2_Monotonicity()
         self.SC_2_big = SC_2_Biggest_tile()
-        self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
+
+
+        self.HW_linetuple = HW_lineTuple()
+        self.HW_rectuple = HW_recTangTuple()
+        self.HW_axetuple = HW_axeTuple()
+        self.HW_mergeable = HW_mergeableTileCount()
+        self.HW_max = HW_maxTileCount()
+        self.HW_layer = HW_layerTileCount()
+        self.HW_distinct = HW_distinctTileCount()
+        self.HW_empty = HW_emptyTileCount()
+
+        self.featureSet = [self.lineTuple]
+
+        # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
         # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples, self.SC_2_mono, self.SC_2_big]
         #self.featureSet = [ self.mergeableTile]
         # self.featureSet = [self.emptyTile, self.lineTuple, self.recTangle,self.axe , self.maxTile, self.layerTile,
@@ -44,15 +57,6 @@ class FeatureHandler(object):
         isomorphicBoards: 8X4X4 matirx, (ul, ur, dr, dl, lr, ll, rl, rr) boardStatus
         :return:
         """
-        # oRows = np.zeros([4, 4], dtype=np.int)
-        # reverseRows = np.zeros([4, 4], dtype=np.int)
-        # oReverseRows = np.zeros([4, 4], dtype=np.int)
-        #
-        # for i in range(4):
-        #     rows = getRow(board, i)
-        #     oRows[3-i] = rows
-        #     reverseRows[i] = reverseRow(rows)
-        #     oReverseRows[3-i] = reverseRows[i]
 
         reverseRows = reverseRow(board)
         oRows = reverseCol(board)

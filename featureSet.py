@@ -640,22 +640,19 @@ class HW_lineTuple(feature):
         # print("update LineTuple")
         self.boards = self.getRotateBoards()  # get 4 boards
 
-        # self.boards = board
-
         for i in range(4):
             for j in range(2):
                 key = self.getKey(self.boards[i], j)
                 symmetricKey = key[::-1]
 
-                self.updateDict(self.fourTuple, key, delta)
+                ##
+                self.fourTuple[key] = self.get_key_value(self.fourTuple, key) + delta
 
                 if symmetricKey != key:
-                    self.updateDict(self.fourTuple, symmetricKey, delta)
-        print(self.fourTuple)
+                    self.fourTuple[symmetricKey] = self.get_key_value(self.fourTuple, symmetricKey) + delta
 
     def getScore(self, board):
         self.boards = self.getRotateBoards()  # ? rotate 가 안되는 것 같은데요?
-        # self.boards = board
 
         sum = 0.0
         for i in range(4):
@@ -664,20 +661,22 @@ class HW_lineTuple(feature):
                 key = self.getKey(self.boards[i], j)
                 symmetricKey = key[::-1]
 
-                sum += self.fourTuple[key]
+                sum += self.get_key_value(self.fourTuple, key)
 
                 if symmetricKey != key:
-                    sum += self.fourTuple[symmetricKey]
+                    sum += self.get_key_value(self.fourTuple, symmetricKey)
         return sum
 
-    def updateDict(self, _dict, _key, _delta):
-        if _key in _dict.keys():
-            _dict[_key] += _delta
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
         else:
-            _dict.update({_key: _delta})
+            _dict[_key] = 0.0 # initialized with 0.1
+            return _dict[_key]
+
 
     def getWeight(self):
-        return self.fourTuple
+        return [self.fourTuple]
 
     def loadWeight(self, weight):
         self.fourTuple = weight
@@ -693,7 +692,7 @@ class HW_recTangTuple(feature):
         k1 = tuple(board[:, num][:-1])
         k2 = tuple(board[:, num+1][:-1])
 
-        key = np.concatenate([k1, k2], axis=0)
+        key = k1 + k2
         return key
 
     def updateScore(self, board, delta):
@@ -705,10 +704,10 @@ class HW_recTangTuple(feature):
                 key1 = self.getKey(self.boards[i], j)
                 key2 = self.getKey(reverseRow(self.boards[i]),j)
                 if key1==key2 and j==1:
-                    self.updateDict(self.sixTuple, key1, delta)
+                    self.sixTuple[key1] = self.get_key_value(self.sixTuple, key1) + delta
                 else:
-                    self.updateDict(self.sixTuple, key1, delta)
-                    self.updateDict(self.sixTuple, key2, delta)
+                    self.sixTuple[key1] = self.get_key_value(self.sixTuple, key1) + delta
+                    self.sixTuple[key2] = self.get_key_value(self.sixTuple, key2) + delta
         # print("update recTangTuple Done")
 
     def getScore(self, board):
@@ -720,16 +719,17 @@ class HW_recTangTuple(feature):
             key2 = self.getKey(self.boards[i], 1)
             key3 = self.getKey(reverseRow(self.boards[i]), 0)
 
-            sum += self.sixTuple[key1]
-            sum += self.sixTuple[key2]
-            sum += self.sixTuple[key3]
+            sum += self.get_key_value(self.sixTuple, key1)
+            sum += self.get_key_value(self.sixTuple, key2)
+            sum += self.get_key_value(self.sixTuple, key3)
         return sum
 
-    def updateDict(self, _dict, _key, _delta):
-        if _key in _dict.keys():
-            _dict[_key] += _delta
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
         else:
-            _dict.update({_key: _delta})
+            _dict[_key] = 0.0 # initialized with 0.1
+            return _dict[_key]
 
     def getWeight(self):
         return self.sixTuple
@@ -740,7 +740,7 @@ class HW_recTangTuple(feature):
 
 class HW_axeTuple(feature):
     def __init__(self):
-        self.sixTuple = np.zeros([3,16,16,16,16,16,16], dtype=np.float)
+        self.sixTuple = {}
 
     def getKey(self, board, num):
         if num>=3:
@@ -759,8 +759,8 @@ class HW_axeTuple(feature):
                 key1 = self.getKey(self.boards[i], j)
                 key2 = self.getKey(reverseRow(self.boards[i]),j)
 
-                self.updateDict(self.sixTuple, key1, delta)
-                self.updateDict(self.sixTuple, key2, delta)
+                self.sixTuple[key1] = self.get_key_value(self.sixTuple, key1) + delta
+                self.sixTuple[key2] = self.get_key_value(self.sixTuple, key2) + delta
         # print("update axeTuple Done")
 
     def getScore(self, board):
@@ -772,15 +772,16 @@ class HW_axeTuple(feature):
                 key1 = self.getKey(self.boards[i],j)
                 key2 = self.getKey(reverseRow(self.boards[i]), j)
 
-                sum += self.sixTuple[key1]
-                sum += self.sixTuple[key2]
+                sum += self.get_key_value(self.sixTuple, key1)
+                sum += self.get_key_value(self.sixTuple, key2)
         return sum
 
-    def updateDict(self, _dict, _key, _delta):
-        if _key in _dict.keys():
-            _dict[_key] += _delta
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
         else:
-            _dict.update({_key: _delta})
+            _dict[_key] = 0.0 # initialized with 0.1
+            return _dict[_key]
 
     def getWeight(self):
         return self.sixTuple;
@@ -793,7 +794,7 @@ class HW_maxTileCount(feature):
         self.maxTile = {}
 
     def getKey(self, board, num=0):
-        board = tuple(board.reshape([1, -1]))
+        board = tuple(board.reshape([1, -1]).tolist())
         key = 0
         for i in range(10, 16):
             key += board.count(2 ** i)
@@ -802,18 +803,19 @@ class HW_maxTileCount(feature):
     def updateScore(self, board, delta):
         # print("update MaxTileCount")
         key = self.getKey(board, 0)
-        self.updateDict(board, key, delta)
+        self.maxTile[key] = self.get_key_value(self.maxTile, key) + delta
         # print("update MaxTileCount Done")
 
     def getScore(self, board):
         key = self.getKey(board, 0)
-        return self.maxTile[key]
+        return self.get_key_value(self.maxTile, key)
 
-    def updateDict(self, _dict, _key, _delta):
-        if _key in _dict.keys():
-            _dict[_key] += _delta
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
         else:
-            _dict.update({_key: _delta})
+            _dict[_key] = 0.0 # initialized with 0.1
+            return _dict[_key]
 
     def getWeight(self):
         return self.maxTile
@@ -827,7 +829,7 @@ class HW_emptyTileCount(feature):
 
     # 返回0个数
     def getKey(self, board, num=0):
-        board = tuple(board.reshape([1, -1]))
+        board = tuple(board.reshape([1, -1]).tolist())
         key = board.count(0)
         return key
 
@@ -835,19 +837,20 @@ class HW_emptyTileCount(feature):
     def updateScore(self, board, delta):
         # print("update emptyTileCount")
         key = self.getKey(board, 0)
-        self.updateDict(self.emptyTile, key, delta)
-        # print("update emptyTileCount done")
+        self.emptyTile[key] = self.get_key_value(self.emptyTile, key) + delta
+       # print("update emptyTileCount done")
 
     # e.g. 返回有2个0 对应的weight
     def getScore(self, board):
         key = self.getKey(board, 0)
-        return self.emptyTile[key]
+        return self.get_key_value(self.emptyTile, key)
 
-    def updateDict(self, _dict, _key, _delta):
-        if _key in _dict.keys():
-            _dict[_key] += _delta
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
         else:
-            _dict.update({_key: _delta})
+            _dict[_key] = 0.0  # initialized with 0.1
+            return _dict[_key]
 
     def getWeight(self):
         return self.emptyTile
@@ -862,25 +865,26 @@ class HW_mergeableTileCount(feature):
     def getKey(self, board, num):
         key = 0
         for i in range(3):
-            key += np.sum(tuple(board[i])==tuple(board[i+1]))
-            key += np.sum(tuple(board[:, i]==tuple(board[:, i+1])))
+            key += np.sum(board[i]==board[i+1])
+            key += np.sum(board[:, i]==board[:, i+1])
         return key
 
     def updateScore(self, board, delta):
         # print("update mergeableTileCount")
         key = self.getKey(board, 0)
-        self.updateDict(board, key, delta)
+        self.mergeableTile[key] = self.get_key_value(self.mergeableTile, key) + delta
         # print("update mergeableTileCount done")
 
     def getScore(self, board):
         key = self.getKey(board, 0)
-        return self.maxTile[key]
+        return self.get_key_value(self.mergeableTile, key)
 
-    def updateDict(self, _dict, _key, _delta):
-        if _key in _dict.keys():
-            _dict[_key] += _delta
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
         else:
-            _dict.update({_key: _delta})
+            _dict[_key] = 0.0  # initialized with 0.1
+            return _dict[_key]
 
     def getWeight(self):
         return self.mergeableTile
@@ -890,7 +894,7 @@ class HW_mergeableTileCount(feature):
 
 class HW_distinctTileCount(feature):
     def __init__(self):
-        self.distinctTile= np.zeros([16], dtype=np.float)
+        self.distinctTile = {}
 
     def getKey(self, board, num):
         # bitset = 0
@@ -912,18 +916,19 @@ class HW_distinctTileCount(feature):
     def updateScore(self, board, delta):
         # print("update distinctTileCount")
         key = self.getKey(board, 0)
-        self.updateDict(self.emptyTile, key, delta)
+        self.distinctTile[key] = self.get_key_value(self.distinctTile, key) + delta
         # print("update distinctTileCount done")
 
     def getScore(self, board):
         key = self.getKey(board, 0)
-        return self.emptyTile[key]
+        return self.get_key_value(self.distinctTile, key)
 
-    def updateDict(self, _dict, _key, _delta):
-        if _key in _dict.keys():
-            _dict[_key] += _delta
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
         else:
-            _dict.update({_key: _delta})
+            _dict[_key] = 0.0 # initialized with 0.1
+            return _dict[_key]
 
     def getWeight(self):
         return self.distinctTile
@@ -933,7 +938,7 @@ class HW_distinctTileCount(feature):
 
 class HW_layerTileCount(feature):
     def __init__(self):
-        self.layerTile = np.zeros([128], dtype=np.float)
+        self.layerTile = {}
 
     def getKey(self, board, num):
         index = 0
@@ -954,18 +959,19 @@ class HW_layerTileCount(feature):
     def updateScore(self, board, delta):
         # print("update layerTileCount")
         key = self.getKey(board, 0)
-        self.updateDict(self.emptyTile, key, delta)
+        self.layerTile[key] = self.get_key_value(self.layerTile, key) + delta
         # print("update layerTileCount done")
 
     def getScore(self, board):
         key = self.getKey(board, 0)
-        return self.emptyTile[key]
+        return self.get_key_value(self.layerTile, key)
 
-    def updateDict(self, _dict, _key, _delta):
-        if _key in _dict.keys():
-            _dict[_key] += _delta
+    def get_key_value(self, _dict, _key):
+        if _key in _dict:
+            return _dict[_key]
         else:
-            _dict.update({_key: _delta})
+            _dict[_key] = 0.0 # initialized with 0.1
+            return _dict[_key]
 
     def getWeight(self):
         return layerTileCount
@@ -974,4 +980,18 @@ class HW_layerTileCount(feature):
         self.layerTile = weight
 
 if __name__=='__main__':
-    pass
+    board = np.array([0,2,2,2,0,2,2,2,2,2,2,2,2,2,2,2]).reshape([4,4])
+    my_tuple = HW_layerTileCount()
+
+    print("befor getScore: ", my_tuple.layerTile)
+    value_before = my_tuple.getScore(board)
+    print("value_before:", value_before)
+    print("after getScore: ", my_tuple.layerTile)
+
+    my_tuple.updateScore(board, 1)
+    print("after updateScore: ", my_tuple.layerTile)
+
+    value_after = my_tuple.getScore(board)
+    print(my_tuple.layerTile)
+
+    print(value_after)
