@@ -1,8 +1,1 @@
-Batch count		10		AVG		2413.76		MAX		6000
-Batch count		20		AVG		2336.92		MAX		5724
-Batch count		30		AVG		2416.48		MAX		6232
-Batch count		10		AVG		2425.72		MAX		6756
-Batch count		20		AVG		2467.32		MAX		5276
-Batch count		30		AVG		2257.76		MAX		5412
-Batch count		40		AVG		2147.08		MAX		6444
-Batch count		50		AVG		2282.52		MAX		5144
+Batch count		10		AVG		2119.84		MAX		5060
