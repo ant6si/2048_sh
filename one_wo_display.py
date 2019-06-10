@@ -10,6 +10,22 @@ from _2048.manager import GameManager
 from FeatureHandler import *
 from operation import *
 import queue
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--line",  default=False, type=bool)
+parser.add_argument("--rec",  default=False, type=bool)
+parser.add_argument("--axe",  default=False, type=bool)
+parser.add_argument("--max",  default=False, type=bool)
+parser.add_argument("--merge",  default=False, type=bool)
+parser.add_argument("--layer",  default=False, type=bool)
+parser.add_argument("--distinct",  default=False, type=bool)
+parser.add_argument("--empty",  default=False, type=bool)
+parser.add_argument("--num", required=True, type=int)
+parser.add_argument("--lr",  default=0.01, type=float)
+
+args = parser.parse_args()
 
 # define events
 EVENTS = [
@@ -35,14 +51,16 @@ GET_DELTAS = [
 
 PROCESS_NUM = 1
 BATCH_SIZE = PROCESS_NUM
-LEARNING_RATE = 0.01  # 0.01
+LEARNING_RATE = args.lr  # 0.01
 DEPTH = 1
 
-f_handler = FeatureHandler()
+f_handler = FeatureHandler(args)
 episodes = queue.Queue()
 f_queue = queue.Queue()
 # tokens = Queue()
 
+weights_filename = "./weights/one_saved_latest_weights_" + str(args.num) + ".pickle"
+result_filename = "./results/one_result_" + str(args.num) + ".txt"
 
 def print_grid(grid):
     for r in range(4):
@@ -229,7 +247,7 @@ def batch_update():
     # line_weight_0 = f_handler.featureSet[0].getWeight()[0][0]
     # print("update: Length of line weight 0: {}\n".format(len(line_weight_0)))
 
-    f_handler.saveWeights("one_saved_latest_weights.pickle")
+    f_handler.saveWeights(weights_filename)
 
     # if max_avg <= batch_score_avg:
     #     print("---Find Maximum Weights and Save it---")
@@ -353,7 +371,7 @@ if __name__ == "__main__":
             score_sum = 0
             partial_max = 0
             time_elapse = time.time() - training_st
-            with open("one_result.txt", "a") as f:
+            with open(result_filename, "a") as f:
                 f.write("time\t\t{:.2f}\t\tcount\t\t{}\t\tAVG\t\t{}\t\tMAX\t\t{}\n".format(time_elapse, count, avg_score
                                                                                , partial_max))
 

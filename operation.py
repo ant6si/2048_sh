@@ -77,7 +77,7 @@ def setCols(cols):
 
 def reverseRow(row):
     if len(row) == 4:
-        return np.flip(row)
+        return np.flip(row, axis=0)
     else:
         return np.flip(row, axis=1)
 

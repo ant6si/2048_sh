@@ -8,7 +8,7 @@ from featureSet import *
 import pickle
 
 class FeatureHandler(object):
-    def __init__(self):
+    def __init__(self, args):
         self.combineMax = combineMaxTileCount()
         self.mergeableTile = mergeableTileCount()
         self.distinctTile = distinctTileCount()
@@ -32,6 +32,24 @@ class FeatureHandler(object):
         self.HW_layer = HW_layerTileCount()
         self.HW_distinct = HW_distinctTileCount()
         self.HW_empty = HW_emptyTileCount()
+
+        self.featureSet = []
+        if args.line:
+            self.featureSet.append(self.HW_linetuple)
+        if args.rec:
+            self.featureSet.append(self.HW_rectuple)
+        if args.axe:
+            self.featureSet.append(self.HW_axetuple)
+        if args.max:
+            self.featureSet.append(self.HW_max)
+        if args.merge:
+            self.featureSet.append(self.HW_mergeable)
+        if args.layer:
+            self.featureSet.append(self.HW_layer)
+        if args.distinct:
+            self.featureSet.append(self.HW_distinct)
+        if args.empty:
+            self.featureSet.append(self.HW_empty)
 
         self.featureSet = [self.HW_linetuple, self.HW_rectuple, self.HW_axetuple, self.HW_max,
                            self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]
