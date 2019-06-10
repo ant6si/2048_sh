@@ -36,7 +36,7 @@ GET_DELTAS = [
 
 PROCESS_NUM = 10
 BATCH_SIZE = PROCESS_NUM
-LEARNING_RATE = 0.005  # 0.01
+LEARNING_RATE =  0.005  # 0.01
 DEPTH = 1
 weight_file_name = "comb1.pickle"
 result_file_name = "comb1.txt"
