@@ -8,7 +8,8 @@ from featureSet import *
 import pickle
 
 class FeatureHandler(object):
-    def __init__(self, args):
+    # def __init__(self, args):
+    def __init__(self):
         self.combineMax = combineMaxTileCount()
         self.mergeableTile = mergeableTileCount()
         self.distinctTile = distinctTileCount()
@@ -33,26 +34,26 @@ class FeatureHandler(object):
         self.HW_distinct = HW_distinctTileCount()
         self.HW_empty = HW_emptyTileCount()
 
-        self.featureSet = []
-        if args.line:
-            self.featureSet.append(self.HW_linetuple)
-        if args.rec:
-            self.featureSet.append(self.HW_rectuple)
-        if args.axe:
-            self.featureSet.append(self.HW_axetuple)
-        if args.max:
-            self.featureSet.append(self.HW_max)
-        if args.merge:
-            self.featureSet.append(self.HW_mergeable)
-        if args.layer:
-            self.featureSet.append(self.HW_layer)
-        if args.distinct:
-            self.featureSet.append(self.HW_distinct)
-        if args.empty:
-            self.featureSet.append(self.HW_empty)
+        # self.featureSet = []
+        # if args.line:
+        #     self.featureSet.append(self.HW_linetuple)
+        # if args.rec:
+        #     self.featureSet.append(self.HW_rectuple)
+        # if args.axe:
+        #     self.featureSet.append(self.HW_axetuple)
+        # if args.max:
+        #     self.featureSet.append(self.HW_max)
+        # if args.merge:
+        #     self.featureSet.append(self.HW_mergeable)
+        # if args.layer:
+        #     self.featureSet.append(self.HW_layer)
+        # if args.distinct:
+        #     self.featureSet.append(self.HW_distinct)
+        # if args.empty:
+        #     self.featureSet.append(self.HW_empty)
 
-        self.featureSet = [self.HW_linetuple, self.HW_rectuple, self.HW_axetuple, self.HW_max,
-                           self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]
+        # self.featureSet = [self.HW_linetuple, self.HW_rectuple, self.HW_axetuple, self.HW_max,
+        #                    self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]
 
         # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
         # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples, self.SC_2_mono, self.SC_2_big]
@@ -64,6 +65,11 @@ class FeatureHandler(object):
         #self.featureSet = [self.combineMax]
         #self.featureSet = [self.emptyTile];
         # self.featureSet = []
+
+        self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]  # basic, comb 1
+        # self.featureSet = [self.HW_max, self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]  #simple, comb 2
+        # self.featureSet = [self.SC_2_big, self.SC_2_mono, self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]  #our proposed, comb3
+
 
     def setSymmetricBoards(self, board):
         """

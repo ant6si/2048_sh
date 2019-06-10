@@ -38,7 +38,8 @@ PROCESS_NUM = 10
 BATCH_SIZE = PROCESS_NUM
 LEARNING_RATE = 0.005  # 0.01
 DEPTH = 1
-weight_file_name = "wo_disp_SC_2.pickle"
+weight_file_name = "comb1.pickle"
+result_file_name = "comb1.txt"
 
 episodes = Queue()
 # f_queue = Queue()
@@ -173,6 +174,7 @@ def play_game_forever():
         tokens.get()
         # print("token!")
         my_f_handler = FeatureHandler()
+
         my_f_handler.loadWeights(weight_file_name)
         # print("Load weight! Successful!")
 
@@ -182,6 +184,7 @@ def play_game_forever():
 
 
 def play_game(f_handler):
+
     # print("data_path: {}".format(data_dir))
     board_chain = []
     reward_chain = []
@@ -239,7 +242,7 @@ def batch_update_forever(batch_count, f_handler):
         if batch_count % many_batch_size == 0:
             # print and reset
             many_batch_avg = many_batch_sum / float(many_batch_size * BATCH_SIZE)
-            with open("result.txt", "a") as f:
+            with open(result_file_name, "a") as f:
                 f.write("Batch count\t\t{}\t\tAVG\t\t{}\t\tMAX\t\t{}\n".format(batch_count, many_batch_avg
                                                                                , many_batch_max))
             many_batch_max, many_batch_avg, many_batch_sum = 0, 0, 0
@@ -267,8 +270,8 @@ def batch_update(batch_count, f_handler):
     # print("---update done, save the latest weights---")
 
     """DEBUG"""
-    line_weight_0 = f_handler.featureSet[0].getWeight()[0]
-    print("update: Length of line weight 0: {}\n".format(len(line_weight_0)))
+    # line_weight_0 = f_handler.featureSet[0].getWeight()[0]
+    # print("update: Length of line weight 0: {}\n".format(len(line_weight_0)))
 
     f_handler.saveWeights(weight_file_name)
     # [f_queue.put(f_handler) for iter in range(PROCESS_NUM)]
