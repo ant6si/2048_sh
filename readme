@@ -1,0 +1,24 @@
+=========================================================================
+
+TD Learning on 2048 Game
+
+Reinforcement learning final project
+contributor: Huiwen Xu and Seungcheol Park
+
+=========================================================================
+
+Installation
+python3.6 2048 appdirs certifi numpy pygame setuptools wheel
+
+$ pip install 2048 appdirs certifi numpy pygame setuptools wheel
+
+=========================================================================
+
+Run
+
+1. Go to the folder including 'makefile'
+2. run 'makefile'
+    $ make
+
+=========================================================================
+
