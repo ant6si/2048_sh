@@ -4,6 +4,7 @@ sys.path.append("../")
 import numpy as np
 from operation import *
 
+
 class feature():
     def __init__(self):
         pass
@@ -18,19 +19,24 @@ class feature():
         pass
 
     def setSymmetricBoards(self, rotateSymmetry, isomorphic):
+        """
+        :param rotateSymmetry: including (up, down, letf, right) 4 boards
+        :param isomorphic: including rotateSymmetry board and its mirrorsymmetric board, total 8 boards
+        """
         self.rotateBoards = rotateSymmetry
         self.isomorphicBoards = isomorphic
 
     def getRotateBoards(self):
+        """
+        :return: rotatedSymmetry board
+        """
         return self.rotateBoards
 
     # horizontal symmetric
     def getMirrorSymmetricBoard(self, board):
+        """
+        :param board: board state
+        :return: mirror symmetric board
+        """
         reverseRows = reverseRow(board)
         return reverseRows
-
-if __name__=="__main__":
-    f = feature()
-    a = np.array(range(16)).reshape([4,4])
-    c = f.getMirrorSymmetricBoard(a)
-    print(c)

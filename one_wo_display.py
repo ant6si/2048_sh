@@ -59,10 +59,13 @@ episodes = queue.Queue()
 f_queue = queue.Queue()
 # tokens = Queue()
 
-weights_filename = "./weights/one_saved_latest_weights_" + str(args.num) + ".pickle"
-result_filename = "./results/one_result_" + str(args.num) + ".txt"
+weights_filename = "../results/one_saved_latest_weights_" + str(args.num) + ".pickle"
+result_filename = "../results/one_result_" + str(args.num) + ".txt"
 
 def print_grid(grid):
+    """
+    print board
+    """
     for r in range(4):
         for c in range(4):
             print("{}".format(grid[r][c]), end=" ")
@@ -70,16 +73,24 @@ def print_grid(grid):
     print()
 
 def get_initial_grid():
+    """
+    initialize the board
+    """
     grid = [ [ 0 for i in range(4)] for j in range(4) ]
     add_random_tile(grid)
     add_random_tile(grid)
     return grid
 
 def free_cells(grid):
-    # count number of free cells in the grid
+    """
+    count number of free cells in the grid
+    """
     return [(x, y) for x in range(4) for y in range(4) if not grid[y][x]]
 
 def add_random_tile(grid):
+    """
+    randomly add 2 or 4 value to the board
+    """
     free_cell_list = free_cells(grid)
     assert len(free_cell_list) !=0
 
@@ -105,7 +116,7 @@ def move(grid, action):
             grid: moved grid after action (random tile not added)
             moved: number of movement (but, use it like boolean)
             sum: acquired score by the movement
-        """
+     """
     moved, sum = 0, 0
     for row, column in CELLS[action]:
         for dr, dc in GET_DELTAS[action](row, column):
@@ -127,6 +138,9 @@ def move(grid, action):
 
 
 def evaluation(grid):
+    """
+    evaluate the board
+    """
     # evaluate the score of the grid
     grid = np.array(grid)
     grid_score = f_handler.getValue(grid)
@@ -134,6 +148,9 @@ def evaluation(grid):
 
 
 def findBestMove(grid, depth=0):
+    """
+    compute the value of next states and choose the best action which will get the best state value
+    """
     # Find Best Move
     # Expectimax Search for depth 1
     best_score = -np.inf
@@ -187,6 +204,9 @@ def expected_random_tile_score(grid, depth=0):
 
 
 def play_game():
+    """
+    play game until the game is over, and save the board state as episode
+    """
     # print("data_path: {}".format(data_dir))
     board_chain = []
     reward_chain = []
@@ -222,6 +242,9 @@ def play_game():
     return game_score
 
 def batch_update():
+    """
+    update weight in batch size
+    """
     batch_size=BATCH_SIZE
     dict = {}
     batch_score_sum=0
@@ -262,6 +285,11 @@ def batch_update():
     # return max_avg
 
 def updateEvaluation(dict, episode):
+    """
+    read in whole episodes and update the weight by using TD learning
+    episode: sequence board state
+    f_handler: feature set
+    """
     board_chain = episode[0]
     reward_chain = episode[1]
     chain_len = len(board_chain)
@@ -299,6 +327,9 @@ def updateEvaluation(dict, episode):
         # f_handler.updateValue(v[i][2], LEARNING_RATE * (score - f_handler.getValue(v[i][2])))
 
 def isGameDone(players):
+    """
+    check if the game is over
+    """
     is_all_dead = True
     for index in range(len(players)):
         player = players[index]
@@ -308,9 +339,15 @@ def isGameDone(players):
     return is_all_dead
 
 def proc_func(arg):
+    """
+    mapping functions
+    """
     arg[0](*arg[1])
 
 def remove_state_files():
+    """
+    detele state files
+    """
     for file_num in range(PROCESS_NUM):
         rm_target = './save/2048.{}.state'.format(file_num)
         if os.path.isfile(rm_target):

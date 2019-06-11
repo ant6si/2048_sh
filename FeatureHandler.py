@@ -10,15 +10,9 @@ import pickle
 class FeatureHandler(object):
     # def __init__(self, args):
     def __init__(self):
-        self.combineMax = combineMaxTileCount()
-        self.mergeableTile = mergeableTileCount()
-        self.distinctTile = distinctTileCount()
-        self.emptyTile = emptyTileCount()
-        self.maxTile = maxTileCount()
-        self.layerTile = layerTileCount()
-        self.axe = axeTuple()
-        self.recTangle = recTangTuple()
-        self.lineTuple = lineTuple()
+        """
+        initialize all feature set
+        """
         self.SC_LineTuples = SC_Linetuple()
         self.SC_RecTuples = SC_Rectuple()
         self.SC_2_mono = SC_2_Monotonicity()
@@ -34,38 +28,6 @@ class FeatureHandler(object):
         self.HW_distinct = HW_distinctTileCount()
         self.HW_empty = HW_emptyTileCount()
 
-        # self.featureSet = []
-        # if args.line:
-        #     self.featureSet.append(self.HW_linetuple)
-        # if args.rec:
-        #     self.featureSet.append(self.HW_rectuple)
-        # if args.axe:
-        #     self.featureSet.append(self.HW_axetuple)
-        # if args.max:
-        #     self.featureSet.append(self.HW_max)
-        # if args.merge:
-        #     self.featureSet.append(self.HW_mergeable)
-        # if args.layer:
-        #     self.featureSet.append(self.HW_layer)
-        # if args.distinct:
-        #     self.featureSet.append(self.HW_distinct)
-        # if args.empty:
-        #     self.featureSet.append(self.HW_empty)
-
-        # self.featureSet = [self.HW_linetuple, self.HW_rectuple, self.HW_axetuple, self.HW_max,
-        #                    self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]
-
-        # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]
-        # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples, self.SC_2_mono, self.SC_2_big]
-        #self.featureSet = [ self.mergeableTile]
-        # self.featureSet = [self.emptyTile, self.lineTuple, self.recTangle,self.axe , self.maxTile, self.layerTile,
-        #                    self.distinctTile, self.mergeableTile]
-        # self.featureSet = [self.emptyTile, self.lineTuple, self.recTangle, self.axe, self.maxTile, self.distinctTile,
-        #                    self.mergeableTile]
-        #self.featureSet = [self.combineMax]
-        #self.featureSet = [self.emptyTile];
-        # self.featureSet = []
-
         self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]  # basic, comb 1
         # self.featureSet = [self.HW_max, self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]  #simple, comb 2
         # self.featureSet = [self.SC_2_big, self.SC_2_mono, self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]  #our proposed, comb3
@@ -73,16 +35,13 @@ class FeatureHandler(object):
 
     def setSymmetricBoards(self, board):
         """
-
-        :param boardStatus: s
+        :param board: s
         oRows: vertical flip
         reverseRows: horizontal flip
         oReverseRows: vertical + horizontal flip
         rotateBoards: 4X4X4 matrix, (up, left, right, down) boardStatus
         isomorphicBoards: 8X4X4 matirx, (ul, ur, dr, dl, lr, ll, rl, rr) boardStatus
-        :return:
         """
-
         reverseRows = reverseRow(board)
         oRows = reverseCol(board)
         oReverseRows = reverseRow(reverseCol(board))
@@ -96,6 +55,9 @@ class FeatureHandler(object):
             self.featureSet[i].setSymmetricBoards(rotateBoards, isomorphicBoards)
 
     def getValue(self, board):
+        """
+        return the state value of board
+        """
         #self.setSymmetricBoards(board)
         value = 0
         for idx in range(len(self.featureSet)):
@@ -103,6 +65,9 @@ class FeatureHandler(object):
         return value
 
     def updateValue(self, board, delta):
+        """
+        update the state value of board
+        """
         # self.setSymmetricBoards(board)
         part_delta = delta / float(len(self.featureSet))
         for idx in range(len(self.featureSet)):
@@ -110,6 +75,9 @@ class FeatureHandler(object):
             # self.featureSet[idx].updateScore(board, delta)
 
     def loadWeights(self, weight_file):
+        """
+        read file and load the weights of feature set
+        """
         if os.path.exists(weight_file):
             with open(weight_file, 'rb') as f:
                 weights = pickle.load(f)
@@ -120,22 +88,12 @@ class FeatureHandler(object):
 
 
     def saveWeights(self, file_name):
+        """
+        save weight as a pickle file
+        """
         weights = []
         for idx in range(len(self.featureSet)):
             weights.append(self.featureSet[idx].getWeight())
             # save weight to pickle
         with open(file_name, 'wb') as f:
             pickle.dump(weights, f)
-
-if __name__ == "__main__":
-    print("hello")
-
-    b = np.array([ [1,2,3,4], [1,2,3,4], [1,2,3,4], [1,2,3,4] ])
-    delta = 10
-
-    a = FeatureHandler()
-    a.getValue(b)
-    a.updateValue(b, delta)
-    a.getValue(b)
-
-
