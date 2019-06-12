@@ -1,4 +1,4 @@
 all: test
 
-test: ./src/batch_wo_display.py
-	python ./src/batch_wo_display.py
+test: ./src/action_advice.py
+	python ./src/action_advice.py
