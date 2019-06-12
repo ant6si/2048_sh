@@ -1,6 +1,7 @@
 import os, pygame, time, random, math
 os.environ['SDL_AUDIODRIVER'] = 'dsp'
-
+import sys
+sys.path.append('/src/')
 from copy import deepcopy
 from pprint import pprint
 import numpy as np

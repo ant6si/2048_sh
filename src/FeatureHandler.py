@@ -28,9 +28,9 @@ class FeatureHandler(object):
         self.HW_distinct = HW_distinctTileCount()
         self.HW_empty = HW_emptyTileCount()
 
-        self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]  # basic, comb 1
+        # self.featureSet = [self.SC_LineTuples, self.SC_RecTuples]  # basic, comb 1
         # self.featureSet = [self.HW_max, self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]  #simple, comb 2
-        # self.featureSet = [self.SC_2_big, self.SC_2_mono, self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]  #our proposed, comb3
+        self.featureSet = [self.SC_2_big, self.SC_2_mono, self.HW_mergeable, self.HW_layer, self.HW_distinct, self.HW_empty]  #our proposed, comb3
 
 
     def setSymmetricBoards(self, board):
@@ -63,6 +63,16 @@ class FeatureHandler(object):
         for idx in range(len(self.featureSet)):
             value += self.featureSet[idx].getScore(board)
         return value
+
+    def get_detail_value(self, board):
+        """
+        return the state value of board for each features
+        """
+        #self.setSymmetricBoards(board)
+        value_list = []
+        for idx in range(len(self.featureSet)):
+            value_list.append(self.featureSet[idx].getScore(board))
+        return value_list
 
     def updateValue(self, board, delta):
         """

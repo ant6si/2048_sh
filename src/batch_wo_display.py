@@ -1,6 +1,9 @@
-import os,time, random, math
+import os, sys, time, random, math
 # import pygame
 os.environ['SDL_AUDIODRIVER'] = 'dsp'
+sys.path.append("src/")
+sys.path.append("pickles/")
+sys.path.append("result/")
 
 from copy import deepcopy
 # from pprint import pprint
@@ -11,6 +14,7 @@ from copy import deepcopy
 from FeatureHandler import *
 from multiprocessing import Process, Queue, Pool
 from operation import *
+
 
 # define events
 # EVENTS = [
@@ -38,8 +42,8 @@ PROCESS_NUM = 10
 BATCH_SIZE = PROCESS_NUM
 LEARNING_RATE =  0.005  # 0.01
 DEPTH = 1
-weight_file_name = "../results/comb1.pickle"
-result_file_name = "../results/comb1.txt"
+weight_file_name = "comb3_0.005.pickle"
+result_file_name = "comb3.txt"
 
 episodes = Queue()
 # f_queue = Queue()
