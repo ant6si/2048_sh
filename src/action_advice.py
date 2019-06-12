@@ -243,6 +243,7 @@ def play_game(game_class=Game2048, title='2048!', data_dir='save'):
     running = True
 
     count = 0
+
     while running:
         clock.tick(120)
         tick += 1
@@ -264,8 +265,9 @@ def play_game(game_class=Game2048, title='2048!', data_dir='save'):
             e = pygame.event.wait()
             e2 = pygame.event.wait()
 
-
             # 0 u /1 d/ 2 r/ 3 l urdl
+            if not ('key' in e.dict):
+                continue
             player_action = e.dict['key']-273
             if player_action == 1:
                 player_action = 2
@@ -303,7 +305,7 @@ def play_game(game_class=Game2048, title='2048!', data_dir='save'):
             #e = EVENTS[best_action]
 
             manager.dispatch(e)
-            time.sleep(0.1)
+            # time.sleep(0.1)
             #pprint(manager.game.grid, width=30)
             #print(manager.game.score)
 
